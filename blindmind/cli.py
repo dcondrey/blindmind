@@ -636,181 +636,6 @@ async def tree_lineage_logic(concept_id: str):
         await add_parents(root, concept.id)
         console.print(root)
 
-async def refine_logic(essay_path: str, style_path: str = None, variants: int = 3, output: str = None):
-    from blindmind.refine import EssayRefiner
-
-    if not os.path.exists(essay_path):
-        rprint(f"[red]File not found: {essay_path}[/red]")
-        return
-
-    with open(essay_path, "r") as f:
-        essay_text = f.read()
-
-    essay_name = os.path.splitext(os.path.basename(essay_path))[0]
-    project = f"refine:{essay_name}"
-
-    style_guide = None
-    if style_path:
-        style_guide = EssayRefiner.load_style_guide(style_path)
-    else:
-        default_style = os.path.expanduser("~/Documents/_Essays/_Articles/_WRITINGSTYLE.md")
-        if os.path.exists(default_style):
-            style_guide = EssayRefiner.load_style_guide(default_style)
-            rprint(f"  [dim]Voice: loaded from {default_style}[/dim]")
-
-    word_count = len(essay_text.split())
-    rprint(Panel(
-        f"[dim]Essay:[/dim] [bold]{essay_name}[/bold] ({word_count:,} words)\n"
-        f"[dim]Project:[/dim] {project}\n"
-        f"[dim]Variants per section:[/dim] {variants}",
-        title="[bold cyan]Refine[/bold cyan]",
-        border_style="cyan",
-    ))
-
-    async for session in get_async_session():
-        refiner = EssayRefiner(session, project=project, style_guide=style_guide)
-
-        # Step 1: Parse
-        with Progress(SpinnerColumn(spinner_name="dots"), TextColumn("[progress.description]{task.description}"), console=console, transient=True) as progress:
-            progress.add_task("[cyan]Parsing essay into sections...", total=None)
-            sections = await refiner.parse_essay(essay_text)
-
-        rprint(f"\n  [bold]Section Map[/bold] ({len(sections)} sections)")
-        rprint(f"  [dim]{'─' * 50}[/dim]")
-        func_icons = {"setup": ".", "escalation": "/", "evidence": "#", "turn": ">", "reflection": "~", "climax": "!", "close": "."}
-        for sec in sections:
-            icon = func_icons.get(sec["function"], "?")
-            preview = sec["content"][:60].replace("\n", " ")
-            rprint(f"  [dim]{sec['index']+1:2}[/dim] [{icon}] [magenta]{sec['function']:12}[/magenta] {sec['title']}")
-            rprint(f"     [dim]{preview}...[/dim]")
-        rprint()
-
-        if not Confirm.ask("  Proceed with refinement?", default=True):
-            return
-
-        # Step 2: Seed originals
-        await refiner.seed_sections()
-
-        # Step 3: Evolve each section
-        selected_content = {i: s["content"] for i, s in enumerate(sections)}
-        total_retained = 0
-
-        for sec_idx, sec in enumerate(sections):
-            rprint(f"\n  [bold]{'━' * 50}[/bold]")
-            rprint(f"  [bold yellow]Section {sec_idx + 1}/{len(sections)}[/bold yellow]: {sec['title']} [dim]({sec['function']})[/dim]")
-            rprint(f"  [bold]{'━' * 50}[/bold]")
-
-            # Show original
-            console.print(Panel(
-                sec["content"],
-                title="[dim]Original[/dim]",
-                border_style="dim",
-                padding=(1, 2),
-            ))
-
-            # Generate variants
-            with Progress(SpinnerColumn(spinner_name="dots"), TextColumn("[progress.description]{task.description}"), console=console, transient=True) as progress:
-                progress.add_task(f"[cyan]Generating {variants} variants...", total=None)
-                section_variants = await refiner.evolve_section(sec_idx, num_variants=variants, selected_content=selected_content)
-
-            if not section_variants:
-                rprint("  [red]No variants generated. Keeping original.[/red]")
-                continue
-
-            # Display variants
-            for vi, (content, approach, critique, mt) in enumerate(section_variants, 1):
-                type_icon = {"REWRITE": "~", "TIGHTEN": "-", "AMPLIFY": "+", "INVERSION": "!"}.get(mt, "?")
-                type_label = {"REWRITE": "Rewrite", "TIGHTEN": "Tighten", "AMPLIFY": "Amplify", "INVERSION": "Inversion"}.get(mt, mt)
-
-                scores_display = (
-                    f"  Voice     {mini_bar(critique.voice_fidelity)} {critique.voice_fidelity}\n"
-                    f"  Impact    {mini_bar(critique.emotional_impact)} {critique.emotional_impact}\n"
-                    f"  Precision {mini_bar(critique.precision)} {critique.precision}\n"
-                    f"  Coherence {mini_bar(critique.coherence)} {critique.coherence}\n"
-                    f"  Original  {mini_bar(critique.originality)} {critique.originality}\n"
-                    f"\n"
-                    f"  [bold]Composite   {score_bar(critique.composite_score)}[/bold]"
-                )
-
-                strengths_line = ""
-                if critique.strengths:
-                    strengths_line = "\n[green]+" + "\n+".join(f" {s}" for s in critique.strengths[:2]) + "[/green]"
-                weaknesses_line = ""
-                if critique.weaknesses:
-                    weaknesses_line = "\n[red]-" + "\n-".join(f" {w}" for w in critique.weaknesses[:2]) + "[/red]"
-
-                border = "green" if critique.composite_score >= 7 else "yellow" if critique.composite_score >= 5 else "red"
-                console.print(Panel(
-                    f"{content}\n\n"
-                    f"[dim italic]{approach}[/dim italic]\n\n"
-                    f"{scores_display}"
-                    f"{strengths_line}{weaknesses_line}",
-                    title=f"[bold][{type_icon}] {type_label}[/bold] [dim]({vi}/{len(section_variants)})[/dim]",
-                    border_style=border,
-                    padding=(1, 2),
-                ))
-
-            # User selection
-            rprint(f"  [dim]Enter variant number (1-{len(section_variants)}) to keep, or 0 for original[/dim]")
-            pick = Prompt.ask("  [bold]Pick[/bold]", default="0")
-            try:
-                pick_num = int(pick)
-            except ValueError:
-                pick_num = 0
-
-            if 1 <= pick_num <= len(section_variants):
-                chosen_content, _, chosen_critique, chosen_mt = section_variants[pick_num - 1]
-                selected_content[sec_idx] = chosen_content
-                await refiner.save_variant(
-                    sec_idx, chosen_content,
-                    generation=1,
-                    fitness=chosen_critique.composite_score,
-                    mutation_type=chosen_mt,
-                    parent_id=sec["concept_id"],
-                )
-                total_retained += 1
-                rprint(f"  [green]Variant {pick_num} selected[/green] [dim](score: {chosen_critique.composite_score:.1f})[/dim]")
-            else:
-                rprint("  [dim]Keeping original[/dim]")
-
-        # Step 4: Assemble
-        assembled = EssayRefiner.assemble([selected_content[i] for i in range(len(sections))])
-
-        # Step 5: Coherence check
-        rprint(f"\n  [bold]{'━' * 50}[/bold]")
-        rprint(f"  [bold]Coherence Check[/bold]")
-
-        with Progress(SpinnerColumn(spinner_name="dots"), TextColumn("[progress.description]{task.description}"), console=console, transient=True) as progress:
-            progress.add_task("[cyan]Checking assembled essay...", total=None)
-            coherence = await refiner.check_coherence(assembled)
-
-        coherence_display = f"  Overall: {mini_bar(coherence.overall_coherence)} {coherence.overall_coherence}/10"
-        if coherence.seams:
-            coherence_display += "\n\n  [yellow]Seams:[/yellow]"
-            for s in coherence.seams[:3]:
-                coherence_display += f"\n  [dim]  {s[:100]}[/dim]"
-        if coherence.momentum_breaks:
-            coherence_display += "\n\n  [yellow]Momentum breaks:[/yellow]"
-            for m in coherence.momentum_breaks[:3]:
-                coherence_display += f"\n  [dim]  {m[:100]}[/dim]"
-        if coherence.suggestions:
-            coherence_display += "\n\n  [green]Fixes:[/green]"
-            for sg in coherence.suggestions[:5]:
-                coherence_display += f"\n  [dim]  {sg[:100]}[/dim]"
-
-        rprint(coherence_display)
-
-        # Step 6: Save output
-        out_path = output or essay_path.replace(".md", "_refined.md")
-        with open(out_path, "w") as f:
-            f.write(assembled)
-
-        assembled_words = len(assembled.split())
-        delta = assembled_words - word_count
-        delta_str = f"+{delta}" if delta > 0 else str(delta)
-        rprint(f"\n  [green]Saved to {out_path}[/green]")
-        rprint(f"  [dim]{assembled_words:,} words ({delta_str} from original) | {total_retained}/{len(sections)} sections refined[/dim]")
-
 def show_settings(project: str = "default"):
     settings_text = (
         f"[cyan]Project[/cyan]      {project}\n"
@@ -844,7 +669,7 @@ def main(ctx: typer.Context):
 
                     rprint(f"\n  [bold cyan]{_active_project}[/bold cyan] [dim]({concept_count} concepts)[/dim]")
                     rprint(f"  [dim]{'─' * 40}[/dim]")
-                    rprint(f"   [bold cyan]e[/bold cyan] Evolve    [bold green]s[/bold green] Seed      [bold magenta]R[/bold magenta] Refine")
+                    rprint(f"   [bold cyan]e[/bold cyan] Evolve    [bold green]s[/bold green] Seed")
                     rprint(f"   [bold magenta]l[/bold magenta] List      [bold white]v[/bold white] View      [bold white]f[/bold white] Find")
                     rprint(f"   [bold yellow]t[/bold yellow] Tree      [bold blue]g[/bold blue] Graph     [dim]a[/dim] Stats")
                     rprint(f"   [bold blue]x[/bold blue] Export    [bold blue]i[/bold blue] Import    [dim]r[/dim] Runs")
@@ -917,10 +742,6 @@ def main(ctx: typer.Context):
                         await import_json_logic(filename, project=proj_override)
                     elif choice in ("a", "10", "stats"):
                         await stats_logic(project=_active_project)
-                    elif choice_raw == "R" or choice == "refine":
-                        essay_file = Prompt.ask("  Essay file path")
-                        num_variants = IntPrompt.ask("  Variants per section", default=3)
-                        await refine_logic(essay_file, variants=num_variants)
                     elif choice in ("r", "11", "runs"):
                         async for session in get_async_session():
                             runs = (await session.execute(
@@ -985,7 +806,6 @@ def main(ctx: typer.Context):
                         rprint(Panel(
                             "[bold cyan]e[/bold cyan] Evolve     Run evolutionary generation cycle (crossover, mutation, critique)\n"
                             "[bold green]s[/bold green] Seed       Add a new seed concept manually\n"
-                            "[bold magenta]R[/bold magenta] Refine     Evolve essay sections with AI rewriting\n"
                             "[bold magenta]l[/bold magenta] List       Show concepts [dim](supports gen:N, domain:X, fit:N filters)[/dim]\n"
                             "[bold white]v[/bold white] View       Inspect a concept with full details and lineage\n"
                             "[bold white]f[/bold white] Find       Search concepts by keyword in title/description\n"
@@ -1080,16 +900,6 @@ def export_cmd(file: str = typer.Argument("blindmind_export.json"), project: Opt
 def import_cmd(file: str = typer.Argument(...), project: Optional[str] = typer.Option(None, "-p")):
     """Import from JSON."""
     asyncio.run(import_json_logic(file, project=project))
-
-@app.command()
-def refine(
-    essay: str = typer.Argument(..., help="Path to essay markdown file"),
-    style: Optional[str] = typer.Option(None, "--style", "-s", help="Path to writing style guide"),
-    variants: int = typer.Option(3, "--variants", "-v", help="Variants per section"),
-    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output file path"),
-):
-    """Refine an essay section by section using evolutionary rewriting."""
-    asyncio.run(refine_logic(essay, style_path=style, variants=variants, output=output))
 
 @app.command("settings")
 def settings_cmd():
