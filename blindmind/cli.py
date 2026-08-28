@@ -901,6 +901,29 @@ def import_cmd(file: str = typer.Argument(...), project: Optional[str] = typer.O
     """Import from JSON."""
     asyncio.run(import_json_logic(file, project=project))
 
+@app.command("export-v1")
+def export_v1_cmd(
+    file: str = typer.Argument("blindmind_v1.json"),
+    project: str = typer.Option(..., "-p", "--project", help="Project to export; v1 files are single-project"),
+):
+    """Export a project through the crosstalk.blindmind.v1 contract."""
+    from blindmind.export_v1 import export_v1_logic
+
+    async def _run():
+        payload, report = await export_v1_logic(file, project)
+        if payload is None:
+            rprint(f"  [red]{report.get('error', 'export failed')}[/red]")
+            raise typer.Exit(1)
+        rprint(f"  [green]{report['concepts_exported']}/{report['concepts_in']} concepts -> {file}[/green]")
+        rprint(f"  [dim]lineage edges: {report['lineage_edges_exported']}[/dim]")
+        if report["unexportable"]:
+            rprint(f"  [yellow]unexportable: {report['unexportable']}[/yellow]")
+            for reason, count in report["unexportable_reasons"].items():
+                rprint(f"    [dim]{count:3} {reason}[/dim]")
+        rprint(f"  [dim]{json.dumps(report)}[/dim]")
+
+    asyncio.run(_run())
+
 @app.command("settings")
 def settings_cmd():
     """Show configuration."""
