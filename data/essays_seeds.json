@@ -1,0 +1,142 @@
+[
+  {
+    "project": "essays",
+    "domain": "Addiction & Recovery",
+    "title": "I Hope Your Child Becomes a Drug Addict",
+    "description": "Provocative empathy-through-rupture argument: only when addiction touches privileged families will society stop pathologizing addicts and start addressing the systems that create desperation. Uses prescriptive scenarios to dismantle middle-class myths about addiction. Rhetorical strategy: provocative title, urgent personal testimony, direct address to 'you'. Emotional register: tenderness beneath rage, fierce love.",
+    "tags": "viral,provocative-title,class-analysis,addiction,empathy,systems-critique"
+  },
+  {
+    "project": "essays",
+    "domain": "Moral Philosophy",
+    "title": "Being a Good Person Made Me a Worse Human Being",
+    "description": "Performative kindness and virtue signaling is a form of violence that prevents authentic human connection. The 'good person' serving soup with track marks is the monster, not the homeless. Personal narrative arc that inverts the expected moral hierarchy. Rhetorical strategy: confession that flips who the reader thinks is virtuous. Emotional register: shame-turned-clarity, dark honesty.",
+    "tags": "viral,contrarian,moral-philosophy,authenticity,performance"
+  },
+  {
+    "project": "essays",
+    "domain": "Institutional Violence",
+    "title": "Compassion Is a Scam",
+    "description": "What society calls compassion is merely managed discomfort at safe distance. Real compassion is rare, inconvenient, and unnamed. Visceral physical details of blood, infections, medical trauma in jails layered with systems analysis of institutional indifference disguised as concern. Emotional register: rage, bitter clarity, hollow laughter at the gap between claims and reality.",
+    "tags": "viral,systems-critique,healthcare,poverty,institutional-violence"
+  },
+  {
+    "project": "essays",
+    "domain": "Military & Identity",
+    "title": "I Was a Good Soldier, Then I Was Nothing",
+    "description": "The machinery of military conditioning kills young people twice: once overseas and once upon return to a civilian world that has no use for what it created. Chronological narrative from pre-deployment through Iraq invasion to homelessness. Opens with identity crisis, moves through sensory-vivid combat, ends in dissolution of self. Emotional register: confusion turning to horror, shame at complicity.",
+    "tags": "military,identity,PTSD,homelessness,masculinity,class"
+  },
+  {
+    "project": "essays",
+    "domain": "Economic Systems",
+    "title": "Spare Change Prevents Real Change",
+    "description": "Charity is a mechanism of social control that soothes consciences and perpetuates inequality by making poverty survivable enough to prevent systemic change. Inverted perspective imagining what receiving charity actually feels like. Builds through accusation into systems analysis. Emotional register: sarcasm, dark humor, accusatory but not without understanding.",
+    "tags": "viral,charity-critique,poverty,economic-systems,class-analysis"
+  },
+  {
+    "project": "essays",
+    "domain": "Systemic Complicity",
+    "title": "If You Believe Homelessness Is a Problem Rather Than a Symptom, You Are the Problem",
+    "description": "Direct confrontation with reader about their daily morning routine, showing hypocrisy at every step. Exhaustive list of professions and their role in exploitation. Your existence perpetuates the mechanisms that create homelessness. Rhetorical strategy: relentless accusation via 'you', refusal to let reader off the hook.",
+    "tags": "viral,confrontational,homelessness,systemic-critique,complicity"
+  },
+  {
+    "project": "essays",
+    "domain": "Healthcare & Poverty",
+    "title": "Healing Is for Rich People",
+    "description": "Access to healing—rest, medical care, psychological safety—is a luxury good. Poor people's survival is mistaken for resilience while actual healing remains locked behind systemic barriers. Stark concrete examples of walking five miles in the rain, being denied treatment. Contrasts rich people's burnout recovery with poor people's punishment for breaking down.",
+    "tags": "viral,healthcare,poverty,class-analysis,resilience-critique"
+  },
+  {
+    "project": "essays",
+    "domain": "Mental Health & Survival",
+    "title": "The Day I Tried to Kill Myself",
+    "description": "Survival from suicide is not a clean redemption arc—it's a messy, ongoing war with oneself. Every scar is proof of strength not because that's inspirational but because it's what survival looks like. Starts by deflating the 'life flashing before your eyes' cliché, moves through degradation of recovery, builds to defiant reclamation of brokenness as power. Dark humor throughout.",
+    "tags": "mental-health,suicide,survival,anti-inspirational,dark-humor"
+  },
+  {
+    "project": "essays",
+    "domain": "Military & Identity",
+    "title": "Don't Thank Me For Being a Marine",
+    "description": "Soldiers are trained to become efficient killers, sent to war under false pretenses, then abandoned. There is no honor in this, only shame and survival. First-person narrative of the Iraq invasion from a terrified young soldier's perspective. Shows the humanity of the 'enemy' and the inhumanity of the mission. Explicitly rejects gratitude.",
+    "tags": "military,war,shame,complicity,anti-gratitude"
+  },
+  {
+    "project": "essays",
+    "domain": "Gender & Identity",
+    "title": "Performing Masculinity in the US Marines",
+    "description": "Gender and masculinity are performances society enforces. The author tried multiple performances—masculine soldier, feminine sex worker, 'authentic self'—and found all to be cages. The real question is why we need these labels at all. Fragmented, lyrical. Includes sexual assault and institutional indifference. Emotional register: tired vulnerability, existential exhaustion.",
+    "tags": "gender,masculinity,military,sexual-violence,identity-performance"
+  },
+  {
+    "project": "essays",
+    "domain": "Bureaucratic Violence",
+    "title": "Not Qualified to Live",
+    "description": "The system has perfected administrative violence—using bureaucracy and 'objective' metrics to discriminate against the most vulnerable. A disabled veteran with housing vouchers rejected through paperwork. The system is designed to fail those it claims to help. Open letter format, controlled rage, betrayal by the nation served.",
+    "tags": "homelessness,disability,veterans,bureaucracy,systemic-failure"
+  },
+  {
+    "project": "essays",
+    "domain": "Gender Politics",
+    "title": "Gender Wars in a Broken System",
+    "description": "Both feminist and men's rights advocates fight legitimate battles while failing to see they're distracted from the real enemy: an economic system that profits from their division. Gender conflict as theater that distracts from economic theft. Refuses tribal warfare. Argues both sides are being weaponized.",
+    "tags": "gender,economics,systems-critique,division,class-analysis"
+  },
+  {
+    "project": "essays",
+    "domain": "Digital Addiction",
+    "title": "Welcome to the Apocalypse",
+    "description": "We are living in a zombie apocalypse right now—people enslaved to devices, disconnected from presence, addicted to digital numbness. Most don't recognize it because the infection is complete. Vivid scene-setting of commuters as the infected, followed by diagnostic framework of infection stages. Dark comedy and horror register.",
+    "tags": "viral,technology,disconnection,satire,apocalypse"
+  },
+  {
+    "project": "essays",
+    "domain": "Charity Critique",
+    "title": "3 Reasons Why Your Charity Actually Makes Homelessness Worse",
+    "description": "Charity perpetuates homelessness by making it survivable, by professionalizing compassion (removing it from rights/justice), and by creating systems where homelessness is profitable to manage rather than solve. Numbered structure with personal testimony as entry point, then systems analysis. Clear-eyed and explanatory.",
+    "tags": "viral,listicle,charity,homelessness,economic-systems"
+  },
+  {
+    "project": "essays",
+    "domain": "Labor & Dignity",
+    "title": "Not All Homeless Are Lazy—Some Are Quietly Improving Your City",
+    "description": "Homeless people are often doing productive work—mapping 83.5 miles of trails (179 million views), cleaning spaces, creating—that society doesn't recognize because it doesn't come with a paycheck. Argues for expanding what counts as 'productive' and 'valuable'. Quiet dignity, finding meaning in invisible labor.",
+    "tags": "homelessness,labor,dignity,invisible-work,value"
+  },
+  {
+    "project": "essays",
+    "domain": "Technology & Isolation",
+    "title": "Disconnected in a Connected World",
+    "description": "We live in a paradox of extreme connection that enables radical isolation. The narrator's upstairs neighbor dies by suicide. We are so tethered to devices and curated identities that we fail to actually see the people closest to us until they're gone. Haunting, devastating clarity, plea for actual presence.",
+    "tags": "viral,technology,suicide,isolation,presence"
+  },
+  {
+    "project": "essays",
+    "domain": "Incarceration & Innovation",
+    "title": "Reimagining Incarceration",
+    "description": "Instead of warehousing people with long sentences, turn them into problem-solvers for society's greatest challenges. Incarcerated people represent untapped intellectual potential that could revolutionize how we approach homelessness, addiction, energy. Proposal/manifesto with concrete pilot program design. Hopeful, practical, dignifying.",
+    "tags": "incarceration,rehabilitation,innovation,systems-reform,dignity"
+  },
+  {
+    "project": "essays",
+    "domain": "Technology & Ethics",
+    "title": "Comment On AI",
+    "description": "The obsession with AI 'purity' and protection of human authenticity misses the point—the real line is not between human and machine but between cowardice and risk, filler and confession. Disabled voices and marginalized writers need AI as a prosthetic tool. Refuses false purity while acknowledging harms of AI training.",
+    "tags": "AI,disability,authenticity,ethics,tools"
+  },
+  {
+    "project": "essays",
+    "domain": "Content & Attention",
+    "title": "Fluff Addiction Is Rising",
+    "description": "We are addicted to low-quality content—'fluff'—as a way to avoid thinking, growing, or facing discomfort. This addiction numbs us and prevents genuine depth or transformation. Punchy, direct address to 'you', diagnostic list of fluff symptoms. Uses low-effort language to critique low-effort consumption, mirroring the problem.",
+    "tags": "viral,attention,content,growth,digital-addiction"
+  },
+  {
+    "project": "essays",
+    "domain": "Satire & Systems",
+    "title": "The Last Feed",
+    "description": "Absurdist satire where animals (a paranoid turkey and a strategic pig planning escape) are more intelligent and intentional than the oblivious humans around them. Anthropomorphizes animals as strategists while humans are portrayed as automata. Commentary on how humans are oblivious to the machinery that controls them.",
+    "tags": "satire,dark-comedy,systems,technology,absurdism"
+  }
+]

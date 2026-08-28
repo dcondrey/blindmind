@@ -1,0 +1,4 @@
+digraph BlindMind {
+  node [shape=box, fontname="Arial", style=filled, fillcolor="#f0f0f0"];
+  rankdir="LR";
+}

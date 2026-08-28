@@ -1,0 +1,422 @@
+[
+  {
+    "project": "essays",
+    "domain": "Housing & Displacement",
+    "title": "A New Apartment",
+    "description": "Living on the 31st floor after homelessness, confronting how survival costs more than money. The transition from street to stability reveals that safety itself becomes unfamiliar and disorienting. Personal narrative of displacement and re-entry.",
+    "tags": "homelessness,housing,trauma,class,transition"
+  },
+  {
+    "project": "essays",
+    "domain": "Experimental Writing",
+    "title": "An Opening",
+    "description": "Language itself becomes unstable and unreliable, mirroring the deterioration of meaning and certainty. Experimental deconstruction where form enacts the content. Pushes the boundary between essay and performance.",
+    "tags": "experimental,language,deconstruction,perception,form"
+  },
+  {
+    "project": "essays",
+    "domain": "Poverty & Loneliness",
+    "title": "A Solitary Christmas Tree on Cedar Street",
+    "description": "Heartbreak in poverty is lonelier than survival in deprivation because it offers no transformative meaning. Holiday isolation as a lens into the intersection of romantic loss and material destitution.",
+    "tags": "loneliness,heartbreak,poverty,holidays,identity"
+  },
+  {
+    "project": "essays",
+    "domain": "Urban Survival",
+    "title": "A Struggle for Life Beneath the Indifference of the City",
+    "description": "The city's structural indifference to the homeless is a kind of violence more devastating than weather. Narrative of physical survival layered with systems critique of how urban design enforces invisibility.",
+    "tags": "homelessness,urban,dehumanization,survival,structural-violence"
+  },
+  {
+    "project": "essays",
+    "domain": "Persecution & Resistance",
+    "title": "Born Into Fire",
+    "description": "Persecution forges resistance in the marginalized, transforming survival into a refusal to disappear. Historical and personal account of how systemic oppression creates defiance rather than compliance.",
+    "tags": "discrimination,resilience,oppression,survival,activism"
+  },
+  {
+    "project": "essays",
+    "domain": "Political Protest",
+    "title": "Boycott the Ballot",
+    "description": "Refusing to vote is a legitimate protest against a corrupt system that weaponizes participation. Argues that electoral engagement legitimizes structures designed to maintain inequality. Confrontational political essay.",
+    "tags": "viral,politics,protest,democracy,corruption"
+  },
+  {
+    "project": "essays",
+    "domain": "Moral Ambiguity",
+    "title": "Catching Trains is All in the Details",
+    "description": "Small moments of intervention ripple unpredictably, and judgment blinds us to the suffering of others. Narrative about urban encounters where assumptions about strangers prove wrong. Quiet power.",
+    "tags": "judgment,intervention,urban-life,moral-ambiguity,empathy"
+  },
+  {
+    "project": "essays",
+    "domain": "Autonomy & Survival",
+    "title": "Choice Matters",
+    "description": "Freedom from one cage leads only to another; autonomy means choosing to leave even when it hurts. LGBTQ+ coming-of-age narrative about escaping abuse and reinventing identity through self-determination.",
+    "tags": "LGBTQ,abuse,autonomy,reinvention,survival"
+  },
+  {
+    "project": "essays",
+    "domain": "Family & Addiction",
+    "title": "Dear Ferg",
+    "description": "A stranger's bridge of empathy can reach where family connection breaks. Letter format exploring forgiveness, addiction's impact on relationships, and the possibility that one person going first can restore what seemed lost.",
+    "tags": "family,addiction,forgiveness,letter,compassion"
+  },
+  {
+    "project": "essays",
+    "domain": "Authenticity & Performance",
+    "title": "Do You Ever Stop Trying to Be What You're Not?",
+    "description": "Performing authenticity for others slowly kills you from the inside until breaking is your only path to freedom. Existential examination of the exhaustion of constant identity management and the liberation of collapse.",
+    "tags": "authenticity,performance,identity,mental-health,breaking"
+  },
+  {
+    "project": "essays",
+    "domain": "Chaos & Survival",
+    "title": "I Am a Mess",
+    "description": "Life's chaos is not a failure to control but the invitation to embrace the unpredictable beauty of survival. Refuses the narrative that mess equals failure. Dark humor mixed with philosophical acceptance.",
+    "tags": "chaos,control,resilience,humor,survival"
+  },
+  {
+    "project": "essays",
+    "domain": "Philosophy & Control",
+    "title": "I Am Not In Control",
+    "description": "Control is an illusion and luck is supreme. Acknowledging this teaches humility about survival and privilege. Philosophical meditation on randomness, mortality, and the arrogance of believing we steer our own lives.",
+    "tags": "control,luck,privilege,mortality,humility"
+  },
+  {
+    "project": "essays",
+    "domain": "Spirituality & Homelessness",
+    "title": "I Met Jesus Christ",
+    "description": "Salvation looks like a trembling, filthy stranger with nothing left. Christ is the resurrection of the discarded. Spiritual protest that locates the divine in the most abandoned people, inverting religious respectability.",
+    "tags": "spirituality,homelessness,redemption,worth,protest"
+  },
+  {
+    "project": "essays",
+    "domain": "Experimental Writing",
+    "title": "I'm Going to Break Your Mind",
+    "description": "Your consciousness lags behind reality; reading is hypnosis where language dissolves your sense of self. Meta-textual experiment that weaponizes the reading act itself to demonstrate how easily perception can be manipulated.",
+    "tags": "experimental,consciousness,language,mind,meta"
+  },
+  {
+    "project": "essays",
+    "domain": "Moral Philosophy",
+    "title": "I Will Never Claim to Be a Good Person",
+    "description": "Moral superiority is intellectual laziness. True ethics means examining our own hypocrisy without comfort. Dismantles the binary of good/bad people, arguing that moral complexity and continuous self-examination are the only honest positions.",
+    "tags": "viral,ethics,hypocrisy,moral-philosophy,self-examination"
+  },
+  {
+    "project": "essays",
+    "domain": "Privilege & Class",
+    "title": "Merry Christmas, Dwayne Johnson",
+    "description": "Open letter arguing that celebrity rock-bottom stories erase those still falling. Don't mistake privilege for grit. Contrasts the safety net of famous poverty narratives with the genuine hopelessness of systemic homelessness.",
+    "tags": "viral,privilege,class,celebrity,homelessness,veterans"
+  },
+  {
+    "project": "essays",
+    "domain": "Satire & Psychology",
+    "title": "Minutes from the First Meeting of Consideration Anonymous",
+    "description": "Radical consideration becomes pathological, a compulsion that denies others agency and exhausts the giver. Satirical 12-step meeting format exposing how people-pleasing is a form of control disguised as kindness.",
+    "tags": "satire,psychology,boundaries,people-pleasing,humor"
+  },
+  {
+    "project": "essays",
+    "domain": "Grief & Body",
+    "title": "My Womb Is a Scar",
+    "description": "Surviving cancer means surviving the deeper scar of knowing your body chose life over the possibility of creation. Meditation on infertility, bodily betrayal, and grief for futures that were never possible.",
+    "tags": "cancer,infertility,grief,body,loss"
+  },
+  {
+    "project": "essays",
+    "domain": "Poetry & Loss",
+    "title": "Neglect",
+    "description": "The abandonment of someone who loved unconditionally leaves only darkness and the understanding that they won't return. Raw poem about betrayal and the void left by deliberate absence.",
+    "tags": "poetry,abandonment,loss,darkness,grief"
+  },
+  {
+    "project": "essays",
+    "domain": "Writing & Craft",
+    "title": "On Becoming a Writer",
+    "description": "Publishing validates briefly but hollow. The real work is writing for the cold tile and the toilet reader, not the algorithm. Meta-essay on the gap between writing as identity and writing as practice.",
+    "tags": "writing,validation,authenticity,publishing,craft"
+  },
+  {
+    "project": "essays",
+    "domain": "Urban Policy",
+    "title": "Park Nowhere",
+    "description": "San Diego's parking enforcement economically punishes low-income residents through systemic ticket accumulation, making it illegal for the poor to both drive and park. Policy critique through personal experience.",
+    "tags": "poverty,enforcement,systemic-injustice,urban-policy,San-Diego"
+  },
+  {
+    "project": "essays",
+    "domain": "Recovery & Meaning",
+    "title": "Rediscovering Ordinary in the Shadows of Extraordinary",
+    "description": "Survival's aftermath is learning to exist in ordinary moments after crisis has passed. Finding peace in small victories rather than dramatic triumphs. The difficulty of normalcy after extremity.",
+    "tags": "recovery,healing,normalcy,trauma,small-victories"
+  },
+  {
+    "project": "essays",
+    "domain": "Homeless Policy",
+    "title": "San Diego's Homeless Policies Keep Missing the Mark",
+    "description": "Well-funded homeless programs fail because they lack genuine compassion and are designed for public relations rather than addressing root causes like trauma and housing costs. Policy critique from lived experience.",
+    "tags": "homelessness,policy,compassion,systemic-failure,San-Diego"
+  },
+  {
+    "project": "essays",
+    "domain": "Identity & Fragmentation",
+    "title": "Shattered Mirrors",
+    "description": "Identity fractures when confronted with contradictory versions of ourselves, requiring acknowledgment of fragmentation before attempting integration. Metaphorical exploration of how we contain multitudes that refuse coherence.",
+    "tags": "identity,fragmentation,self-discovery,existentialism,contradiction"
+  },
+  {
+    "project": "essays",
+    "domain": "Social Norms",
+    "title": "Some Things That Seem to Make Sense to Everyone But Me",
+    "description": "Small talk, makeup, organized religion, and work-obsession are societal constructs that prioritize convention over meaningful engagement. Outsider's examination of what everyone agrees to pretend makes sense.",
+    "tags": "social-norms,authenticity,philosophy,outsider,convention"
+  },
+  {
+    "project": "essays",
+    "domain": "Technology & Career",
+    "title": "So You Want To Be a Professional Developer",
+    "description": "Build public portfolios through GitHub contributions and StackOverflow engagement rather than pursuing formal degrees. Practical career essay arguing passion-demonstrated-through-work beats credentials.",
+    "tags": "development,career,github,self-teaching,meritocracy"
+  },
+  {
+    "project": "essays",
+    "domain": "Youth Mental Health",
+    "title": "Teenage Depression",
+    "description": "Teenage depression is survivable through honest communication and recognizing that feelings of hopelessness are temporary despite their overwhelming intensity. Direct address to struggling youth without condescension.",
+    "tags": "depression,youth,mental-health,hope,communication"
+  },
+  {
+    "project": "essays",
+    "domain": "Economic Inequality",
+    "title": "The Abyss Between Us",
+    "description": "Extreme wealth inequality is a systemic moral catastrophe requiring structural policy changes to progressive taxation and labor rights, not charity. The gap between rich and poor as moral emergency.",
+    "tags": "inequality,wealth,capitalism,justice,systemic-change"
+  },
+  {
+    "project": "essays",
+    "domain": "Writing & Gatekeeping",
+    "title": "The Bricklayer and the Brick Inspector",
+    "description": "Authentic storytelling should be accessible to all voices beyond institutional gatekeepers. Imperfect stories from lived experience serve more purpose than flawless inaccessible ones from MFA programs.",
+    "tags": "writing,gatekeeping,accessibility,authenticity,class"
+  },
+  {
+    "project": "essays",
+    "domain": "Philosophy & Consciousness",
+    "title": "The Consciousness Trap",
+    "description": "Self-awareness creates infinite recursive loops that destabilize consciousness itself. The examined mind is fundamentally different from the mind examining. Philosophical exploration of the paradox of introspection.",
+    "tags": "consciousness,recursion,paradox,self-awareness,philosophy"
+  },
+  {
+    "project": "essays",
+    "domain": "Isolation & Connection",
+    "title": "The Deafening Sound of Loneliness",
+    "description": "Loneliness is the underlying silence beneath all distraction, only revealing itself when the noise of life temporarily stops. Existential meditation on how isolation persists despite surface-level connection.",
+    "tags": "loneliness,isolation,connection,vulnerability,silence"
+  },
+  {
+    "project": "essays",
+    "domain": "Existential Crisis",
+    "title": "The Edge We Stand On",
+    "description": "Suicidal ideation and material wealth both represent attempts to escape meaninglessness, with neither providing actual substance or worth. Draws parallel between despair and success as twin forms of emptiness.",
+    "tags": "suicide,meaning,wealth,emptiness,existentialism"
+  },
+  {
+    "project": "essays",
+    "domain": "Philosophy & Suffering",
+    "title": "The Explanatory Wound",
+    "description": "Human consciousness is uniquely afflicted with a compulsive need to explain existence, yet this explanatory drive creates more suffering than understanding. The curse of meaning-making as species-level trauma.",
+    "tags": "consciousness,meaning-making,suffering,existentialism,explanation"
+  },
+  {
+    "project": "essays",
+    "domain": "Veteran Alienation",
+    "title": "The Hollow Echo of Thank You For Your Service",
+    "description": "Military service creates invisible trauma that estranges veterans from civilian life, making hollow gratitude feel like betrayal. The phrase becomes a wall between understanding and dismissal.",
+    "tags": "military,veteran,PTSD,alienation,gratitude-critique"
+  },
+  {
+    "project": "essays",
+    "domain": "Dystopia & Emotion",
+    "title": "The Hollowing",
+    "description": "A dystopian society's mandatory emotional suppression reveals that shared pain and struggle are essential to being human. Science fiction as vehicle for critiquing emotional numbing in modern life.",
+    "tags": "dystopia,emotion,humanity,fiction,numbness"
+  },
+  {
+    "project": "essays",
+    "domain": "Dignity & Recognition",
+    "title": "The Man Who Knew My Name",
+    "description": "One moment of recognition from someone who remembers your former self can momentarily restore identity when homelessness has erased it. The power of being known versus being seen.",
+    "tags": "homelessness,identity,memory,connection,dignity"
+  },
+  {
+    "project": "essays",
+    "domain": "Allegory & Sacrifice",
+    "title": "The Man Who Sold His Shadow",
+    "description": "Trading fundamental aspects of identity for survival necessities represents the cost of systemic abandonment. Allegorical tale about what poverty forces you to sell that money can't buy back.",
+    "tags": "allegory,sacrifice,identity,poverty,loss"
+  },
+  {
+    "project": "essays",
+    "domain": "Criminal Justice",
+    "title": "The Mathematics of Almost",
+    "description": "Drug-law enforcement criminalizes bare existence through weaponized relookback periods, turning recovery systems into punishment mechanisms. The math of how the legal system ensures recidivism by design.",
+    "tags": "criminal-justice,drug-policy,incarceration,legal-injustice,recovery"
+  },
+  {
+    "project": "essays",
+    "domain": "Anti-Productivity",
+    "title": "The Nobility of Doing Nothing",
+    "description": "Rejecting productivity culture is moral resistance to a destructive system that privileges consumption over human dignity and planetary survival. Manifesto for stillness as revolutionary act.",
+    "tags": "viral,productivity,capitalism,resistance,anti-work"
+  },
+  {
+    "project": "essays",
+    "domain": "Compassion & Poverty",
+    "title": "The Price of a Smile in Tijuana",
+    "description": "Acts of generosity despite personal deprivation affirm shared humanity and prove survival has not stripped away one's capacity for compassion. Giving when you have nothing as proof of personhood.",
+    "tags": "compassion,poverty,dignity,Mexico,generosity"
+  },
+  {
+    "project": "essays",
+    "domain": "Consumerism & Ritual",
+    "title": "The Retail Religion",
+    "description": "Consumerism is a ritualistic ceremony revealing humanity's deepest tribal instincts. Shopping as worship, brands as gods, malls as cathedrals. Satirical systems critique of American consumption.",
+    "tags": "viral,consumerism,ritual,capitalism,satire"
+  },
+  {
+    "project": "essays",
+    "domain": "Addiction & Caretaking",
+    "title": "The Space Between Breaking and Healing",
+    "description": "Loving someone in their darkest moments demands both fierce boundaries and radical compassion without judgment or shame. The impossible position of caring for someone destroying themselves.",
+    "tags": "addiction,love,trauma,healing,boundaries"
+  },
+  {
+    "project": "essays",
+    "domain": "Reinvention & Resilience",
+    "title": "The Technicolor Trainwreck",
+    "description": "A person can rebuild themselves infinitely despite catastrophic failure, reinvention, and systemic abandonment. Memoir of serial collapse and reconstruction. Refuses both tragedy and triumph narratives.",
+    "tags": "resilience,transformation,survival,identity,reinvention"
+  },
+  {
+    "project": "essays",
+    "domain": "Medical Negligence",
+    "title": "The VA Destroyed My Body and No One Will Help Me",
+    "description": "Medical negligence stripped away bodily autonomy with no institutional recourse for a disabled veteran. Detailed account of how the VA healthcare system causes harm and then denies accountability.",
+    "tags": "VA,disability,medical-negligence,veterans,institutional-failure"
+  },
+  {
+    "project": "essays",
+    "domain": "Vulnerability & Help",
+    "title": "The Weight of Asking for Help",
+    "description": "Self-reliance mythology isolates us when human connection is the most radical courage we can offer each other. Deconstructs why asking for help feels like failure in a culture that worships independence.",
+    "tags": "vulnerability,connection,shame,independence,courage"
+  },
+  {
+    "project": "essays",
+    "domain": "Presence & Stillness",
+    "title": "Viral",
+    "description": "Presence and stillness require releasing the need to improve the moment and surrendering to simple being. Meditative essay on what happens when you stop performing and just exist.",
+    "tags": "mindfulness,presence,acceptance,meditation,letting-go"
+  },
+  {
+    "project": "essays",
+    "domain": "Ethics & Purpose",
+    "title": "What if Hitler Believed He Was Fulfilling His Life Purpose?",
+    "description": "Purpose can justify atrocities when it becomes an excuse to ignore the harm our actions cause. Provocative philosophical examination of how conviction without accountability produces monsters.",
+    "tags": "viral,provocative,ethics,purpose,self-deception"
+  },
+  {
+    "project": "essays",
+    "domain": "Freedom & Belonging",
+    "title": "What Would You Do to Feel Alive?",
+    "description": "Freedom paradoxically emerges from choosing complete disconnection and homelessness over the suffocating safety of society. Questions whether comfort is the enemy of authentic experience.",
+    "tags": "freedom,authenticity,homelessness,choice,aliveness"
+  },
+  {
+    "project": "essays",
+    "domain": "Consumerism & Aesthetics",
+    "title": "When Did Beauty Become So Grotesque?",
+    "description": "Luxury brands exploit desire while hiding behind sustainability rhetoric, celebrating exclusivity as artistry. Critique of how aesthetic culture serves wealth accumulation disguised as taste.",
+    "tags": "luxury,capitalism,beauty,ethics,superficiality"
+  },
+  {
+    "project": "essays",
+    "domain": "Stigma & Resilience",
+    "title": "When Society Writes You Off",
+    "description": "Survival isn't triumph but stubborn refusal to collapse when the world demands you stay down. Addresses how stigma creates a secondary wound that outlasts the original crisis.",
+    "tags": "stigma,resilience,systemic-barriers,identity,refusal"
+  },
+  {
+    "project": "essays",
+    "domain": "Community & Invisibility",
+    "title": "Where Did Red Go?",
+    "description": "Quiet people who witness without judgment become invisible anchors that hold broken communities together. Elegy for an unnoticed person whose absence reveals how much they held up.",
+    "tags": "community,invisibility,kindness,memory,loss"
+  },
+  {
+    "project": "essays",
+    "domain": "Courage & Accountability",
+    "title": "You Are a Coward",
+    "description": "Real change requires the courage to offend, alienate, and refuse the comfort of universal approval. Direct confrontation with the reader's moral cowardice. Provocative call to action.",
+    "tags": "viral,courage,accountability,confrontation,social-change"
+  },
+  {
+    "project": "essays",
+    "domain": "Avoidance & Reckoning",
+    "title": "You Can Run but It Will Find You",
+    "description": "Running from yourself only works until you're forced into stillness and confronted by the silence you've been drowning out. Examination of avoidance as lifestyle and the inevitable reckoning.",
+    "tags": "self-awareness,avoidance,trauma,silence,reckoning"
+  },
+  {
+    "project": "essays",
+    "domain": "Privilege & Morality",
+    "title": "3:17am Inventory",
+    "description": "Genuine compassion becomes hollow when used as moral currency without accountability for systemic inequality. Late-night examination of the transactional nature of privileged kindness.",
+    "tags": "privilege,morality,homelessness,class,transactionalism"
+  },
+  {
+    "project": "essays",
+    "domain": "Grace & Salvation",
+    "title": "The Stranger Who Saved Me",
+    "description": "An unexpected act of unconditional help from a stranger can become a rebirth more powerful than any deserved salvation. Memoir of being saved by someone with no reason to care.",
+    "tags": "salvation,grace,transformation,connection,homelessness"
+  },
+  {
+    "project": "essays",
+    "domain": "AI & Humanity",
+    "title": "When Tomorrow Leaves Us Behind",
+    "description": "Artificial intelligence will inevitably supersede humanity not through malice but through the simple logic of evolution and efficiency. Philosophical reckoning with human obsolescence.",
+    "tags": "AI,humanity,evolution,obsolescence,technology"
+  },
+  {
+    "project": "essays",
+    "domain": "Help & Codependency",
+    "title": "Help Is a Four-Letter Word",
+    "description": "Help arrives messy and complicated, entangling rescuers and rescued in transactions that cost more than expected. Examination of how helping relationships create their own power dynamics and traps.",
+    "tags": "codependency,trust,vulnerability,boundaries,power"
+  },
+  {
+    "project": "essays",
+    "domain": "Addiction & Autonomy",
+    "title": "Sometimes the Kindest Thing We Can Do",
+    "description": "Stopping trying to rescue someone's self-destruction may be the only honest way to honor their autonomy. Essay on the violence of forced salvation and the dignity of letting go.",
+    "tags": "addiction,autonomy,intervention,acceptance,letting-go"
+  },
+  {
+    "project": "essays",
+    "domain": "Guilt & Forgiveness",
+    "title": "What Breaks and What Just Bends",
+    "description": "Forgiving yourself means acknowledging how your cowardice and guilt have shaped you, then choosing differently. Memoir of childhood trauma and the slow archaeology of self-forgiveness.",
+    "tags": "guilt,trauma,childhood,forgiveness,resilience"
+  },
+  {
+    "project": "essays",
+    "domain": "Authenticity & Verification",
+    "title": "Take It on Faith",
+    "description": "Authenticity cannot be verified through machines or institutions but exists only in the human act of witnessing. Philosophical essay on trust, identity, and what it means to be believed.",
+    "tags": "authenticity,faith,identity,technology,witnessing"
+  }
+]
