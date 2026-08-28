@@ -65,9 +65,20 @@ def build_export(concepts, lineages, project, directive):
         mutation = operators.get(concept_id)
         if mutation is not None and mutation not in OPERATOR_MAP:
             reject(concept_id, f"mutation type {mutation} has no Crosstalk operator")
-        for parent in parents.get(concept_id, []):
-            if by_id[parent].generation >= concept.generation:
-                reject(concept_id, "a parent's generation is not below the child's")
+
+    # A Crosstalk lineage edge must run from a strictly earlier generation. This
+    # binds the edge, not the concept: v1 imposes no generation ordering, so a
+    # child whose recorded parent is not earlier is exported with its ancestry
+    # truncated rather than dropped, and the loss is counted.
+    unrepresentable_edges = 0
+    truncated_children = set()
+    for concept_id, concept in by_id.items():
+        keep = [p for p in parents.get(concept_id, []) if by_id[p].generation < concept.generation]
+        dropped = len(parents.get(concept_id, [])) - len(keep)
+        if dropped:
+            unrepresentable_edges += dropped
+            truncated_children.add(concept_id)
+            parents[concept_id] = keep
 
     # A dropped concept cannot remain a parent: Crosstalk rejects dangling refs.
     changed = True
@@ -91,7 +102,7 @@ def build_export(concepts, lineages, project, directive):
             "id": concept_id,
             "generation": concept.generation,
             "parent_ids": parent_ids,
-            "mutation_type": OPERATOR_MAP[operators[concept_id]] if parent_ids else SEED_OPERATOR,
+            "mutation_type": OPERATOR_MAP.get(operators.get(concept_id, ""), SEED_OPERATOR),
             "domain": concept.domain,
             "title": concept.title,
             "mechanism": concept.description,
@@ -124,6 +135,8 @@ def build_export(concepts, lineages, project, directive):
         "lineage_edges_in": len(lineages),
         "lineage_edges_exported": sum(len(i["parent_ids"]) for i in ideas),
         "lineage_edges_outside_project": edges_outside_project,
+        "lineage_edges_dropped_unrepresentable": unrepresentable_edges,
+        "children_with_truncated_ancestry": len(truncated_children),
         "non_seeds_without_recorded_parents": orphan_non_seeds,
         "concepts_with_a_fitness_scalar": sum(1 for i in ideas if i["external_scores"]),
         "concepts_with_predicted_measurements": 0,
