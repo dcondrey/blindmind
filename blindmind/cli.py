@@ -727,8 +727,8 @@ async def display_graph_logic(project: str = None):
         # (single `async with` session), so they never change underneath this recursive
         # closure. Safe as written; not a real B023 hazard.
         def add_children(tree_node, concept_id):
-            for child_id, mut_type in children_map.get(concept_id, []):
-                child = concept_map.get(child_id)
+            for child_id, mut_type in children_map.get(concept_id, []):  # noqa: B023
+                child = concept_map.get(child_id)  # noqa: B023
                 if not child:
                     continue
                 icon = MUTATION_ICONS.get(mut_type, "?")
@@ -794,9 +794,11 @@ async def tree_lineage_logic(concept_id: str, project: str | None = None):
         # so the loop body never runs a second time and `session` never changes underneath
         # this recursive closure. Safe as written; not a real B023 hazard.
         async def add_parents(t, cid):
-            links = (await session.execute(select(Lineage).where(Lineage.child_id == cid))).scalars().all()
+            link_stmt = select(Lineage).where(Lineage.child_id == cid)
+            links = (await session.execute(link_stmt)).scalars().all()  # noqa: B023
             for link in links:
-                p = (await session.execute(select(Concept).where(Concept.id == link.parent_id))).scalars().first()
+                parent_stmt = select(Concept).where(Concept.id == link.parent_id)
+                p = (await session.execute(parent_stmt)).scalars().first()  # noqa: B023
                 if p:
                     icon = MUTATION_ICONS.get(link.mutation_type, "?")
                     node = t.add(f"[cyan]{escape(p.title)}[/cyan] [dim]Gen {p.generation} [{icon}][/dim]")
