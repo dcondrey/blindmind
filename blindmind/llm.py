@@ -55,6 +55,51 @@ class LLMStats:
 FATAL_ERROR_KEYWORDS = ("credit", "balance", "budget", "quota", "not found")
 
 
+class ClaudeCLIOutputError(RuntimeError):
+    """The `claude` CLI exited 0 but its stdout could not be turned into structured data.
+
+    Deliberately carries a fixed, keyword-free message: _completion() classifies a
+    failure as permanent by substring-matching str(e) against FATAL_ERROR_KEYWORDS,
+    so raw model prose must never reach the exception text -- a response that happened
+    to contain "budget" or "not found" would blacklist the provider for the whole
+    session, and claude-cli is the only provider in headless runs. The raw text,
+    stderr and exit code go to the log instead, where they are diagnostic but inert.
+    """
+
+
+def _extract_structured_output(payload: dict) -> dict:
+    """Pull the schema-conforming object out of a `claude --output-format json` payload.
+
+    The CLI delivers structured output via a tool call (stop_reason "tool_use") in
+    payload["structured_output"]. When the model ends its turn with prose instead
+    (stop_reason "end_turn") that key is null and payload["result"] holds plain text.
+    The previous code fed that text straight to json.loads(), which rejected it with a
+    bare "Expecting value: line 1 column 1 (char 0)" -- the uninformative error seen in
+    production headless runs. Reproduced against claude CLI 2.1.251: subtype "success",
+    is_error false, exit code 0, empty stderr, so no other check catches it.
+    """
+    if payload.get("is_error"):
+        logger.warning(f"claude CLI error result: {str(payload.get('result'))[:500]}")
+        raise ClaudeCLIOutputError(f"claude CLI reported an error result (subtype={payload.get('subtype')!r})")
+
+    structured = payload.get("structured_output")
+    if structured is not None:
+        return structured
+
+    context = f"stop_reason={payload.get('stop_reason')!r} subtype={payload.get('subtype')!r}"
+    result = payload.get("result")
+    if not isinstance(result, str) or not result.strip():
+        raise ClaudeCLIOutputError(f"claude CLI returned no structured output and an empty result field ({context})")
+
+    try:
+        return json.loads(result)
+    except json.JSONDecodeError:
+        logger.warning(f"claude CLI returned unstructured prose instead of schema output ({context}): {result[:500]}")
+        raise ClaudeCLIOutputError(
+            f"claude CLI returned unstructured prose instead of schema output ({context}); see log for the text"
+        ) from None
+
+
 def _resolve_key_for_override(model: str) -> str | None:
     """Guess which configured API key an explicit --model override needs, by provider prefix."""
     if model == "claude-cli":
@@ -244,8 +289,21 @@ class LLMEngine:
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=2, min=4, max=20),
+        # ClaudeCLIOutputError is retried here for the same reason as a rate limit:
+        # it is nondeterministic, not a bug in the request. The same directive prompt
+        # is reused across a whole generation and ~3% of calls under it (6/207 in one
+        # observed run) came back as prose while the rest returned schema output, so
+        # the model's choice to answer in prose instead of calling the structured-output
+        # tool clears on a re-ask. Without this the candidate is lost outright, because
+        # headless runs have claude-cli as their only provider and _completion()'s
+        # cross-provider fallback has nowhere to fall back to.
         retry=retry_if_exception_type(
-            (exceptions.ServiceUnavailableError, exceptions.APIError, exceptions.RateLimitError)
+            (
+                exceptions.ServiceUnavailableError,
+                exceptions.APIError,
+                exceptions.RateLimitError,
+                ClaudeCLIOutputError,
+            )
         ),
     )
     async def _try_provider(
@@ -323,13 +381,22 @@ class LLMEngine:
             if proc.returncode != 0:
                 raise RuntimeError(f"claude CLI exited {proc.returncode}: {stderr.decode(errors='replace')[:500]}")
 
-            payload = json.loads(stdout.decode())
-            if payload.get("is_error"):
-                raise RuntimeError(f"claude CLI error: {payload.get('result')}")
+            raw = stdout.decode(errors="replace")
+            try:
+                payload = json.loads(raw)
+            except json.JSONDecodeError:
+                # Exit code 0 with unparseable stdout. Log everything that could
+                # explain it -- previously this surfaced as a bare JSONDecodeError
+                # indistinguishable from the prose case handled below.
+                logger.warning(
+                    f"claude CLI exited 0 but stdout was not JSON "
+                    f"({len(raw)} chars): {raw[:500]!r}; stderr: {stderr.decode(errors='replace')[:500]!r}"
+                )
+                raise ClaudeCLIOutputError(
+                    f"claude CLI exited 0 but stdout was not JSON ({len(raw)} chars); see log for stdout/stderr"
+                ) from None
 
-            structured = payload.get("structured_output")
-            if structured is None:
-                structured = json.loads(payload["result"])
+            structured = _extract_structured_output(payload)
 
             usage = payload.get("usage", {})
             self.stats.record(

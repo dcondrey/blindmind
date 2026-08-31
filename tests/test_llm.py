@@ -1,9 +1,16 @@
+import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from litellm import exceptions
 
-from blindmind.llm import LLMEngine, LLMStats
+from blindmind.llm import (
+    FATAL_ERROR_KEYWORDS,
+    ClaudeCLIOutputError,
+    LLMEngine,
+    LLMStats,
+    _extract_structured_output,
+)
 from blindmind.llm_schemas import CriticScore, MutationOutput
 
 
@@ -150,3 +157,39 @@ def test_set_model_override_puts_override_first_and_forces_rebuild():
     engine.set_model_override("gpt-4o")
     assert engine._initialized is False
     assert engine._blacklisted == set()
+
+
+def test_claude_cli_prose_response_raises_diagnosable_error_not_jsondecodeerror():
+    """The production failure mode: claude CLI exits 0 with subtype "success" and
+    is_error false, but the model answered in prose instead of calling the
+    structured-output tool, so structured_output is null and result is plain text.
+    That used to surface as a bare "Expecting value: line 1 column 1 (char 0)".
+
+    The error message must also stay free of FATAL_ERROR_KEYWORDS, since
+    _completion() substring-matches it to decide whether to blacklist the provider
+    for the session -- model prose reaching the message would blacklist on a
+    response that merely mentions "budget" or "not found"."""
+    payload = {
+        "is_error": False,
+        "subtype": "success",
+        "stop_reason": "end_turn",
+        "structured_output": None,
+        "result": "I notice your two messages contain contradictory instructions about the budget, not found.",
+    }
+
+    with pytest.raises(ClaudeCLIOutputError) as excinfo:
+        _extract_structured_output(payload)
+
+    assert not isinstance(excinfo.value, json.JSONDecodeError)
+    assert "end_turn" in str(excinfo.value)
+    assert not any(word in str(excinfo.value).lower() for word in FATAL_ERROR_KEYWORDS)
+
+
+def test_claude_cli_structured_output_is_returned_directly():
+    payload = {"is_error": False, "subtype": "success", "structured_output": {"greeting": "Hi"}}
+    assert _extract_structured_output(payload) == {"greeting": "Hi"}
+
+
+def test_claude_cli_json_encoded_result_is_parsed_when_structured_output_absent():
+    payload = {"is_error": False, "subtype": "success", "result": '{"greeting": "Hi"}'}
+    assert _extract_structured_output(payload) == {"greeting": "Hi"}
