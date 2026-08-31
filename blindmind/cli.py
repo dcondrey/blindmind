@@ -31,10 +31,7 @@ from blindmind.llm import llm_engine
 from blindmind.logging import logger
 from blindmind.models import Concept, EvolutionRun, Lineage, RunStatus
 
-app = typer.Typer(
-    help="BlindMind: Elite Evolutionary Concept Refinement using LLMs.",
-    rich_markup_mode="rich"
-)
+app = typer.Typer(help="BlindMind: Elite Evolutionary Concept Refinement using LLMs.", rich_markup_mode="rich")
 console = Console()
 
 _active_project = "default"
@@ -53,8 +50,25 @@ MUTATION_LABELS = {
 # on an unrecognized choice (difflib.get_close_matches against single letters is
 # meaningless, so the letter shortcuts are intentionally excluded from this list).
 MENU_WORDS = [
-    "evolve", "seed", "list", "find", "search", "view", "tree", "graph", "stats",
-    "export", "import", "runs", "project", "config", "settings", "delete", "quit", "exit", "help",
+    "evolve",
+    "seed",
+    "list",
+    "find",
+    "search",
+    "view",
+    "tree",
+    "graph",
+    "stats",
+    "export",
+    "import",
+    "runs",
+    "project",
+    "config",
+    "settings",
+    "delete",
+    "quit",
+    "exit",
+    "help",
 ]
 
 
@@ -72,6 +86,7 @@ async def _find_concept_by_prefix(session, concept_id: str, project: str | None 
     concepts = (await session.execute(stmt)).scalars().all()
     return _match_prefix(concepts, concept_id)
 
+
 def score_bar(value: float, max_val: float = 10, width: int = 10) -> str:
     filled = int((value / max_val) * width)
     empty = width - filled
@@ -82,6 +97,7 @@ def score_bar(value: float, max_val: float = 10, width: int = 10) -> str:
     else:
         color = "red"
     return f"[{color}]{'━' * filled}[/{color}][dim]{'╌' * empty}[/dim] {value:.1f}"
+
 
 def mini_bar(value: int, max_val: int = 10) -> str:
     filled = value
@@ -94,6 +110,7 @@ def mini_bar(value: int, max_val: int = 10) -> str:
         color = "red"
     return f"[{color}]{'█' * filled}[/{color}][dim]{'░' * empty}[/dim]"
 
+
 def welcome_banner():
     art = (
         "[bold cyan]  ┌──────────────────────────────────┐[/bold cyan]\n"
@@ -104,6 +121,7 @@ def welcome_banner():
         "[bold cyan]  └──────────────────────────────────┘[/bold cyan]"
     )
     console.print(art)
+
 
 async def ensure_setup() -> str:
     """Setup API keys, init DB, and return the active project name."""
@@ -138,6 +156,7 @@ async def ensure_setup() -> str:
 
     if found_keys:
         from blindmind.llm import llm_engine
+
         llm_engine.providers = await llm_engine._get_available_providers()
         llm_engine._initialized = True
 
@@ -156,9 +175,9 @@ async def ensure_setup() -> str:
                     f"    [bold]{i}[/bold]. {p} [dim]({s['total']} concepts, "
                     f"{s['domains']} domains, gen {s['generations']})[/dim]"
                 )
-            rprint(f"    [bold]{len(projects)+1}[/bold]. [dim]Create new project[/dim]")
+            rprint(f"    [bold]{len(projects) + 1}[/bold]. [dim]Create new project[/dim]")
 
-            pick = Prompt.ask(f"\n  [bold]Load project[/bold] [dim](1-{len(projects)+1})[/dim]", default="1")
+            pick = Prompt.ask(f"\n  [bold]Load project[/bold] [dim](1-{len(projects) + 1})[/dim]", default="1")
             try:
                 pick_num = int(pick)
                 if 1 <= pick_num <= len(projects):
@@ -212,7 +231,9 @@ async def ensure_setup() -> str:
 
     return _active_project
 
+
 # --- Core Logic ---
+
 
 def _friendly_llm_error(msg: str) -> str:
     """Appends a one-line, non-invented suggestion for the LLM failure classes
@@ -226,6 +247,7 @@ def _friendly_llm_error(msg: str) -> str:
     if "All LLM providers failed" in msg:
         return f"{msg}\n  [dim]-> Check your API key and network, or retry with a different --model.[/dim]"
     return msg
+
 
 async def run_evolution_logic(
     generations: int,
@@ -253,12 +275,14 @@ async def run_evolution_logic(
         )
         current_directive = run_obj.latest_directive
 
-        rprint(Panel(
-            f"[dim]Project:[/dim] [bold]{project}[/bold]  [dim]Threshold:[/dim] {settings.critic_threshold}  "
-            f"[dim]Temp:[/dim] {settings.variation_temperature}  [dim]Model:[/dim] {settings.litellm_model}",
-            title="[bold cyan]Evolution Run[/bold cyan]",
-            border_style="cyan",
-        ))
+        rprint(
+            Panel(
+                f"[dim]Project:[/dim] [bold]{project}[/bold]  [dim]Threshold:[/dim] {settings.critic_threshold}  "
+                f"[dim]Temp:[/dim] {settings.variation_temperature}  [dim]Model:[/dim] {settings.litellm_model}",
+                title="[bold cyan]Evolution Run[/bold cyan]",
+                border_style="cyan",
+            )
+        )
 
         engine = None
         try:
@@ -337,22 +361,21 @@ async def run_evolution_logic(
                     else:
                         panel_border_style = "red"
 
-                    console.print(Panel(
-                        f"[bold white]{mutation.title}[/bold white]\n"
-                        f"[magenta]{mutation.domain}[/magenta]\n\n"
-                        f"{mutation.description}\n\n"
-                        f"{scores_display}"
-                        f"{flaws_section}{impl_section}\n\n"
-                        f"[dim italic]{critique.evolutionary_directive}[/dim italic]",
-                        title=f"[bold][{type_icon}] {type_label}[/bold] [dim]({i}/{len(survivors)})[/dim]",
-                        border_style=panel_border_style,
-                        padding=(1, 2),
-                    ))
-
-                    score_input = Prompt.ask(
-                        "[bold]Score[/bold] [dim](1-10 keep, Enter skip)[/dim]",
-                        default="0"
+                    console.print(
+                        Panel(
+                            f"[bold white]{mutation.title}[/bold white]\n"
+                            f"[magenta]{mutation.domain}[/magenta]\n\n"
+                            f"{mutation.description}\n\n"
+                            f"{scores_display}"
+                            f"{flaws_section}{impl_section}\n\n"
+                            f"[dim italic]{critique.evolutionary_directive}[/dim italic]",
+                            title=f"[bold][{type_icon}] {type_label}[/bold] [dim]({i}/{len(survivors)})[/dim]",
+                            border_style=panel_border_style,
+                            padding=(1, 2),
+                        )
                     )
+
+                    score_input = Prompt.ask("[bold]Score[/bold] [dim](1-10 keep, Enter skip)[/dim]", default="0")
                     try:
                         user_score = int(score_input)
                     except ValueError:
@@ -401,16 +424,17 @@ async def run_evolution_logic(
 
             s = llm_engine.stats.summary
             summary_parts = [f"{s['total_calls']} LLM calls"]
-            if s['failed']:
+            if s["failed"]:
                 summary_parts.append(f"[red]{s['failed']} failed[/red]")
-            if s['input_tokens'] + s['output_tokens']:
-                summary_parts.append(f"{s['input_tokens']+s['output_tokens']:,} tokens")
-            if s['avg_latency_ms']:
+            if s["input_tokens"] + s["output_tokens"]:
+                summary_parts.append(f"{s['input_tokens'] + s['output_tokens']:,} tokens")
+            if s["avg_latency_ms"]:
                 summary_parts.append(f"avg {s['avg_latency_ms']}ms")
-            if hasattr(engine, 'adaptive_threshold') and engine.adaptive_threshold != settings.critic_threshold:
+            if hasattr(engine, "adaptive_threshold") and engine.adaptive_threshold != settings.critic_threshold:
                 summary_parts.append(f"threshold {settings.critic_threshold:.1f} -> {engine.adaptive_threshold:.1f}")
 
             rprint(f"\n  [dim]{' | '.join(summary_parts)}[/dim]")
+
 
 async def list_concepts_logic(
     generation: int | None, limit: int, domain: str = None, min_fitness: float = None, project: str = None
@@ -453,12 +477,16 @@ async def list_concepts_logic(
             else:
                 fit_style = ""
             table.add_row(
-                c.short_id, str(c.generation), c.domain, c.title,
+                c.short_id,
+                str(c.generation),
+                c.domain,
+                c.title,
                 f"[{fit_style}]{fit}[/{fit_style}]" if fit_style else fit,
-                c.tags or ""
+                c.tags or "",
             )
         console.print(table)
         rprint(f"  [dim]{len(results)} concepts[/dim]")
+
 
 async def search_concepts_logic(
     query: str, domain: str = None, min_fitness: float = None, limit: int = 20, project: str = None
@@ -484,6 +512,7 @@ async def search_concepts_logic(
             table.add_row(c.short_id, str(c.generation), c.domain, c.title, fit)
         console.print(table)
 
+
 async def stats_logic(project: str = None):
     async for session in get_async_session():
         s = await get_stats(session, project=project)
@@ -493,12 +522,16 @@ async def stats_logic(project: str = None):
             return
 
         # Compact stats in a panel
-        has_scores = s['max_fitness'] > 0
+        has_scores = s["max_fitness"] > 0
         fitness_line = (
-            f"Fitness: [green]{s['max_fitness']}[/green] best  [dim]|[/dim]  "
-            f"[yellow]{s['avg_fitness']}[/yellow] avg  [dim]|[/dim]  "
-            f"[red]{s['min_fitness']}[/red] worst"
-        ) if has_scores else "Fitness: [dim]no scored concepts yet[/dim]"
+            (
+                f"Fitness: [green]{s['max_fitness']}[/green] best  [dim]|[/dim]  "
+                f"[yellow]{s['avg_fitness']}[/yellow] avg  [dim]|[/dim]  "
+                f"[red]{s['min_fitness']}[/red] worst"
+            )
+            if has_scores
+            else "Fitness: [dim]no scored concepts yet[/dim]"
+        )
 
         stats_text = (
             f"[bold]{s['total']}[/bold] concepts  [dim]|[/dim]  "
@@ -508,11 +541,13 @@ async def stats_logic(project: str = None):
             f"Gen [yellow]{s['generations']}[/yellow]\n\n"
             f"{fitness_line}"
         )
-        console.print(Panel(
-            stats_text,
-            title=f"[bold]Latent Space[/bold]{f' ({project})' if project else ''}",
-            border_style="cyan",
-        ))
+        console.print(
+            Panel(
+                stats_text,
+                title=f"[bold]Latent Space[/bold]{f' ({project})' if project else ''}",
+                border_style="cyan",
+            )
+        )
 
         if "gen_distribution" in s and s["gen_distribution"]:
             max_count = max(s["gen_distribution"].values())
@@ -523,12 +558,19 @@ async def stats_logic(project: str = None):
                 label = "seed" if gen == 0 else f"gen {gen}"
                 rprint(f"  {label:>6}  {bar} {count}")
 
+
 async def pick_concept_id(project: str, prompt_label: str = "Pick") -> str | None:
     """Show concept list and let user pick one by row number or short ID. Returns short ID or None."""
     async for session in get_async_session():
-        results = (await session.execute(
-            select(Concept).where(Concept.project == project).order_by(Concept.created_at.desc()).limit(30)
-        )).scalars().all()
+        results = (
+            (
+                await session.execute(
+                    select(Concept).where(Concept.project == project).order_by(Concept.created_at.desc()).limit(30)
+                )
+            )
+            .scalars()
+            .all()
+        )
 
         if not results:
             rprint("  [dim]No concepts in this project.[/dim]")
@@ -578,12 +620,8 @@ async def view_concept_logic(concept_id: str, project: str | None = None):
 
         # Gather lineage context
         lineage_text = ""
-        parent_links = (await session.execute(
-            select(Lineage).where(Lineage.child_id == concept.id)
-        )).scalars().all()
-        child_links = (await session.execute(
-            select(Lineage).where(Lineage.parent_id == concept.id)
-        )).scalars().all()
+        parent_links = (await session.execute(select(Lineage).where(Lineage.child_id == concept.id))).scalars().all()
+        child_links = (await session.execute(select(Lineage).where(Lineage.parent_id == concept.id))).scalars().all()
 
         if parent_links:
             parent_lines = []
@@ -610,18 +648,21 @@ async def view_concept_logic(concept_id: str, project: str | None = None):
             if child_lines:
                 lineage_text += "\n[dim]Children:[/dim]\n" + "\n".join(child_lines)
 
-        console.print(Panel(
-            f"[bold white]{concept.title}[/bold white]\n"
-            f"[magenta]{concept.domain}[/magenta] [dim]|[/dim] Gen {concept.generation} "
-            f"[dim]|[/dim] {concept.project}\n\n"
-            f"{concept.description}\n\n"
-            f"Fitness: {fit_display}\n"
-            f"[dim]Tags: {concept.tags or 'none'}[/dim]"
-            f"{lineage_text}\n\n"
-            f"[dim]ID: {concept.id}[/dim]\n"
-            f"[dim]{concept.created_at.strftime('%Y-%m-%d %H:%M')}[/dim]",
-            border_style="blue",
-        ))
+        console.print(
+            Panel(
+                f"[bold white]{concept.title}[/bold white]\n"
+                f"[magenta]{concept.domain}[/magenta] [dim]|[/dim] Gen {concept.generation} "
+                f"[dim]|[/dim] {concept.project}\n\n"
+                f"{concept.description}\n\n"
+                f"Fitness: {fit_display}\n"
+                f"[dim]Tags: {concept.tags or 'none'}[/dim]"
+                f"{lineage_text}\n\n"
+                f"[dim]ID: {concept.id}[/dim]\n"
+                f"[dim]{concept.created_at.strftime('%Y-%m-%d %H:%M')}[/dim]",
+                border_style="blue",
+            )
+        )
+
 
 async def delete_concept_logic(concept_id: str, project: str | None = None):
     async for session in get_async_session():
@@ -633,6 +674,7 @@ async def delete_concept_logic(concept_id: str, project: str | None = None):
         if Confirm.ask("  [red]Delete?[/red]", default=False):
             if await delete_concept(session, concept.id):
                 rprint("  [green]Deleted.[/green]")
+
 
 async def export_json_logic(file: str, project: str = None):
     async for session in get_async_session():
@@ -649,10 +691,17 @@ async def export_json_logic(file: str, project: str = None):
             "project": project or "all",
             "exported_at": datetime.now(UTC).isoformat(),
             "concepts": [
-                {"id": str(c.id), "project": c.project, "domain": c.domain, "title": c.title,
-                 "description": c.description, "generation": c.generation,
-                 "fitness_score": c.fitness_score, "tags": c.tags,
-                 "created_at": c.created_at.isoformat()}
+                {
+                    "id": str(c.id),
+                    "project": c.project,
+                    "domain": c.domain,
+                    "title": c.title,
+                    "description": c.description,
+                    "generation": c.generation,
+                    "fitness_score": c.fitness_score,
+                    "tags": c.tags,
+                    "created_at": c.created_at.isoformat(),
+                }
                 for c in concepts
             ],
             "lineages": [
@@ -663,6 +712,7 @@ async def export_json_logic(file: str, project: str = None):
         with open(file, "w") as f:
             json.dump(data, f, indent=2)
         rprint(f"  [green]Exported {len(concepts)} concepts to {file}[/green]")
+
 
 async def import_json_logic(file: str, project: str = None):
     if not os.path.exists(file):
@@ -693,8 +743,10 @@ async def import_json_logic(file: str, project: str = None):
             count += 1
     rprint(f"  [green]Imported {count} concepts[/green]")
 
+
 async def display_graph_logic(project: str = None):
     from rich.tree import Tree
+
     async for session in get_async_session():
         stmt = select(Concept)
         if project:
@@ -781,14 +833,17 @@ async def export_graph_logic(file: str, project: str = None):
             f.write("\n".join(dot_content))
         rprint(f"  [green]Graph exported to {file}[/green]")
 
+
 async def tree_lineage_logic(concept_id: str, project: str | None = None):
     from rich.tree import Tree
+
     async for session in get_async_session():
         concept = await _find_concept_by_prefix(session, concept_id, project=project)
         if not concept:
             rprint("[red]Not found.[/red]")
             return
         root = Tree(f"[bold green]{escape(concept.title)}[/bold green] [dim]Gen {concept.generation}[/dim]")
+
         # `session` is a closure over the `async for session in get_async_session()` loop
         # variable, but that generator yields exactly once (single `async with` session),
         # so the loop body never runs a second time and `session` never changes underneath
@@ -803,8 +858,10 @@ async def tree_lineage_logic(concept_id: str, project: str | None = None):
                     icon = MUTATION_ICONS.get(link.mutation_type, "?")
                     node = t.add(f"[cyan]{escape(p.title)}[/cyan] [dim]Gen {p.generation} [{icon}][/dim]")
                     await add_parents(node, p.id)
+
         await add_parents(root, concept.id)
         console.print(root)
+
 
 def show_settings(project: str = "default"):
     settings_text = (
@@ -819,12 +876,15 @@ def show_settings(project: str = "default"):
     )
     console.print(Panel(settings_text, title="[bold]Settings[/bold]", border_style="dim"))
 
+
 # --- CLI Commands ---
+
 
 @app.callback(invoke_without_command=True)
 def main(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         welcome_banner()
+
         async def _main():
             global _active_project
             await ensure_setup()
@@ -834,9 +894,11 @@ def main(ctx: typer.Context):
                     # Fetch quick stats for header
                     concept_count = 0
                     async for session in get_async_session():
-                        concept_count = (await session.execute(
-                            select(func.count(Concept.id)).where(Concept.project == _active_project)
-                        )).scalar() or 0
+                        concept_count = (
+                            await session.execute(
+                                select(func.count(Concept.id)).where(Concept.project == _active_project)
+                            )
+                        ).scalar() or 0
 
                     rprint(f"\n  [bold cyan]{_active_project}[/bold cyan] [dim]({concept_count} concepts)[/dim]")
                     rprint(f"  [dim]{'─' * 40}[/dim]")
@@ -860,9 +922,7 @@ def main(ctx: typer.Context):
                     if choice in ("e", "1", "evolve"):
                         gens = IntPrompt.ask("  Generations", default=1)
                         pop = IntPrompt.ask("  Population", default=5)
-                        threshold_str = Prompt.ask(
-                            f"  Threshold [dim]({settings.critic_threshold})[/dim]", default=""
-                        )
+                        threshold_str = Prompt.ask(f"  Threshold [dim]({settings.critic_threshold})[/dim]", default="")
                         temp_str = Prompt.ask(
                             f"  Temperature [dim]({settings.variation_temperature})[/dim]", default=""
                         )
@@ -950,12 +1010,18 @@ def main(ctx: typer.Context):
                         await stats_logic(project=_active_project)
                     elif choice in ("r", "11", "runs"):
                         async for session in get_async_session():
-                            runs = (await session.execute(
-                                select(EvolutionRun)
-                                .where(EvolutionRun.project == _active_project)
-                                .order_by(EvolutionRun.created_at.desc())
-                                .limit(10)
-                            )).scalars().all()
+                            runs = (
+                                (
+                                    await session.execute(
+                                        select(EvolutionRun)
+                                        .where(EvolutionRun.project == _active_project)
+                                        .order_by(EvolutionRun.created_at.desc())
+                                        .limit(10)
+                                    )
+                                )
+                                .scalars()
+                                .all()
+                            )
                             if not runs:
                                 rprint("  [dim]No runs yet.[/dim]")
                             else:
@@ -966,9 +1032,9 @@ def main(ctx: typer.Context):
                                 table.add_column("Kept", justify="right", width=4)
                                 table.add_column("When", style="dim", width=12)
                                 for r in runs:
-                                    sc = {
-                                        "COMPLETED": "green", "FAILED": "red", "CANCELLED": "yellow"
-                                    }.get(r.status, "blue")
+                                    sc = {"COMPLETED": "green", "FAILED": "red", "CANCELLED": "yellow"}.get(
+                                        r.status, "blue"
+                                    )
                                     table.add_row(
                                         str(r.id)[:8],
                                         f"[{sc}]{r.status.lower()}[/{sc}]",
@@ -990,9 +1056,9 @@ def main(ctx: typer.Context):
                             for pi, p in enumerate(projects, 1):
                                 marker = " [bold green]*[/bold green]" if p == _active_project else ""
                                 rprint(f"    [bold]{pi}[/bold]. {p}{marker}")
-                            rprint(f"    [bold]{len(projects)+1}[/bold]. [dim]Create new[/dim]")
+                            rprint(f"    [bold]{len(projects) + 1}[/bold]. [dim]Create new[/dim]")
                             pick = Prompt.ask(
-                                f"  [bold]Switch[/bold] [dim](1-{len(projects)+1}, empty to cancel)[/dim]",
+                                f"  [bold]Switch[/bold] [dim](1-{len(projects) + 1}, empty to cancel)[/dim]",
                                 default="",
                             )
                             if not pick.strip():
@@ -1009,7 +1075,7 @@ def main(ctx: typer.Context):
                                     else:
                                         continue
                                 else:
-                                    rprint(f"  [yellow]{pick_num} is out of range (1-{len(projects)+1}).[/yellow]")
+                                    rprint(f"  [yellow]{pick_num} is out of range (1-{len(projects) + 1}).[/yellow]")
                                     continue
                             except ValueError:
                                 if pick.strip() in projects:
@@ -1026,27 +1092,29 @@ def main(ctx: typer.Context):
                                 _active_project = new_proj.strip()
                         rprint(f"  [green]Active: {_active_project}[/green]")
                     elif choice in ("?", "h", "help"):
-                        rprint(Panel(
-                            "[bold cyan]e[/bold cyan] Evolve     Run evolutionary generation cycle "
-                            "(crossover, mutation, critique)\n"
-                            "[bold green]s[/bold green] Seed       Add a new seed concept manually\n"
-                            "[bold magenta]l[/bold magenta] List       Show concepts "
-                            "[dim](supports gen:N, domain:X, fit:N filters)[/dim]\n"
-                            "[bold white]v[/bold white] View       Inspect a concept with full details and lineage\n"
-                            "[bold white]f[/bold white] Find       Search concepts by keyword in title/description\n"
-                            "[bold yellow]t[/bold yellow] Tree       Show ancestry tree for a concept\n"
-                            "[bold blue]g[/bold blue] Graph      Display full project lineage as a tree\n"
-                            "[dim]a[/dim] Stats      Latent space statistics and generation distribution\n"
-                            "[bold blue]x[/bold blue] Export     Export concepts to JSON file\n"
-                            "[bold blue]i[/bold blue] Import     Import concepts from JSON file\n"
-                            "[dim]r[/dim] Runs       Show recent evolution run history\n"
-                            "[bold]p[/bold] Project    Switch or create projects\n"
-                            "[dim]c[/dim] Config     Show current settings\n"
-                            "[red]d[/red] Delete     Remove a concept\n"
-                            "[dim]q[/dim] Quit       Exit the application",
-                            title="[bold]Help[/bold]",
-                            border_style="dim",
-                        ))
+                        rprint(
+                            Panel(
+                                "[bold cyan]e[/bold cyan] Evolve     Run evolutionary generation cycle "
+                                "(crossover, mutation, critique)\n"
+                                "[bold green]s[/bold green] Seed       Add a new seed concept manually\n"
+                                "[bold magenta]l[/bold magenta] List       Show concepts "
+                                "[dim](supports gen:N, domain:X, fit:N filters)[/dim]\n"
+                                "[bold white]v[/bold white] View       Inspect a concept with full details and lineage\n"
+                                "[bold white]f[/bold white] Find       Search concepts by keyword in title/description\n"
+                                "[bold yellow]t[/bold yellow] Tree       Show ancestry tree for a concept\n"
+                                "[bold blue]g[/bold blue] Graph      Display full project lineage as a tree\n"
+                                "[dim]a[/dim] Stats      Latent space statistics and generation distribution\n"
+                                "[bold blue]x[/bold blue] Export     Export concepts to JSON file\n"
+                                "[bold blue]i[/bold blue] Import     Import concepts from JSON file\n"
+                                "[dim]r[/dim] Runs       Show recent evolution run history\n"
+                                "[bold]p[/bold] Project    Switch or create projects\n"
+                                "[dim]c[/dim] Config     Show current settings\n"
+                                "[red]d[/red] Delete     Remove a concept\n"
+                                "[dim]q[/dim] Quit       Exit the application",
+                                title="[bold]Help[/bold]",
+                                border_style="dim",
+                            )
+                        )
                     elif choice in ("q", "0", "quit", "exit"):
                         rprint("  [dim]Done.[/dim]")
                         break
@@ -1057,13 +1125,16 @@ def main(ctx: typer.Context):
                 except KeyboardInterrupt:
                     rprint("\n  [dim]Press q to exit.[/dim]")
                     continue
+
         asyncio.run(_main())
+
 
 @app.command()
 def init():
     """Initialize the database."""
     welcome_banner()
     asyncio.run(ensure_setup())
+
 
 @app.command()
 def run(
@@ -1081,6 +1152,7 @@ def run(
         )
     )
 
+
 @app.command("list")
 def list_cmd(
     generation: int | None = typer.Option(None, "--gen", "-g"),
@@ -1091,6 +1163,7 @@ def list_cmd(
 ):
     """List concepts."""
     asyncio.run(list_concepts_logic(generation, limit, domain=domain, min_fitness=min_fitness, project=project))
+
 
 @app.command()
 def search(
@@ -1103,40 +1176,48 @@ def search(
     """Search concepts."""
     asyncio.run(search_concepts_logic(query, domain=domain, min_fitness=min_fitness, limit=limit, project=project))
 
+
 @app.command()
 def view(concept_id: str, project: str | None = typer.Option(None, "-p")):
     """View a concept."""
     asyncio.run(view_concept_logic(concept_id, project=project))
+
 
 @app.command()
 def delete(concept_id: str, project: str | None = typer.Option(None, "-p")):
     """Delete a concept."""
     asyncio.run(delete_concept_logic(concept_id, project=project))
 
+
 @app.command()
 def stats(project: str | None = typer.Option(None, "-p")):
     """Latent space statistics."""
     asyncio.run(stats_logic(project=project))
+
 
 @app.command()
 def graph(file: str = "evolution_graph.dot", project: str | None = typer.Option(None, "-p")):
     """Export to Graphviz DOT."""
     asyncio.run(export_graph_logic(file, project=project))
 
+
 @app.command()
 def tree(concept_id: str, project: str | None = typer.Option(None, "-p")):
     """Visualize ancestry."""
     asyncio.run(tree_lineage_logic(concept_id, project=project))
+
 
 @app.command("export")
 def export_cmd(file: str = typer.Argument("blindmind_export.json"), project: str | None = typer.Option(None, "-p")):
     """Export to JSON."""
     asyncio.run(export_json_logic(file, project=project))
 
+
 @app.command("import")
 def import_cmd(file: str = typer.Argument(...), project: str | None = typer.Option(None, "-p")):
     """Import from JSON."""
     asyncio.run(import_json_logic(file, project=project))
+
 
 @app.command("export-v1")
 def export_v1_cmd(
@@ -1161,14 +1242,17 @@ def export_v1_cmd(
 
     asyncio.run(_run())
 
+
 @app.command("settings")
 def settings_cmd():
     """Show configuration."""
     show_settings()
 
+
 @app.command("projects")
 def projects_cmd():
     """List all projects."""
+
     async def _list():
         await init_db()
         async for session in get_async_session():
@@ -1182,7 +1266,9 @@ def projects_cmd():
                     f"  [bold]{p}[/bold] [dim]|[/dim] {s['total']} concepts [dim]|[/dim] "
                     f"{s['domains']} domains [dim]|[/dim] gen {s['generations']}"
                 )
+
     asyncio.run(_list())
+
 
 if __name__ == "__main__":
     app()

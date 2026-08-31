@@ -19,6 +19,7 @@ CLAUDE_CLI_LABEL = "Claude (subscription)"
 
 T = TypeVar("T", bound=BaseModel)
 
+
 class LLMStats:
     def __init__(self):
         self.total_calls = 0
@@ -108,60 +109,73 @@ class LLMEngine:
         pool = []
 
         if self._explicit_override:
-            pool.append({
-                "model": self._explicit_override,
-                "api_key": _resolve_key_for_override(self._explicit_override),
-                "label": f"Override ({self._explicit_override})",
-            })
+            pool.append(
+                {
+                    "model": self._explicit_override,
+                    "api_key": _resolve_key_for_override(self._explicit_override),
+                    "label": f"Override ({self._explicit_override})",
+                }
+            )
 
         # Quality-first: strongest/most-trusted providers before cheaper fallbacks.
         if shutil.which("claude"):
             pool.append({"model": "claude-cli", "api_key": None, "label": CLAUDE_CLI_LABEL})
         if settings.anthropic_api_key:
-            pool.append({
-                "model": "anthropic/claude-3-5-haiku-20241022",
-                "api_key": settings.anthropic_api_key,
-                "label": "Anthropic",
-            })
+            pool.append(
+                {
+                    "model": "anthropic/claude-3-5-haiku-20241022",
+                    "api_key": settings.anthropic_api_key,
+                    "label": "Anthropic",
+                }
+            )
         if settings.openai_api_key:
             pool.append({"model": "gpt-4o-mini", "api_key": settings.openai_api_key, "label": "OpenAI"})
         if settings.groq_api_key:
-            pool.append({
-                "model": "groq/llama-3.3-70b-versatile",
-                "api_key": settings.groq_api_key,
-                "label": "Groq",
-            })
+            pool.append(
+                {
+                    "model": "groq/llama-3.3-70b-versatile",
+                    "api_key": settings.groq_api_key,
+                    "label": "Groq",
+                }
+            )
         if settings.gemini_api_key:
             pool.append({"model": "gemini/gemini-1.5-flash", "api_key": settings.gemini_api_key, "label": "Gemini"})
         if settings.mistral_api_key:
-            pool.append({
-                "model": "mistral/mistral-small-latest",
-                "api_key": settings.mistral_api_key,
-                "label": "Mistral",
-            })
+            pool.append(
+                {
+                    "model": "mistral/mistral-small-latest",
+                    "api_key": settings.mistral_api_key,
+                    "label": "Mistral",
+                }
+            )
 
         if settings.openrouter_api_key:
-            pool.append({
-                "model": "openrouter/openai/gpt-4o-mini",
-                "api_key": settings.openrouter_api_key,
-                "label": "OpenRouter (Paid)",
-            })
+            pool.append(
+                {
+                    "model": "openrouter/openai/gpt-4o-mini",
+                    "api_key": settings.openrouter_api_key,
+                    "label": "OpenRouter (Paid)",
+                }
+            )
 
             # Free-tier models are last-resort only: unranked for quality, so they never
             # outrank a paid/subscription provider. Appended at the end of the pool.
             try:
                 import httpx
+
                 async with httpx.AsyncClient(timeout=10) as client:
                     resp = await client.get("https://openrouter.ai/api/v1/models")
                     if resp.status_code == 200:
                         or_models = resp.json().get("data", [])
                         free_models = [m for m in or_models if m.get("pricing", {}).get("prompt") == "0"]
                         for fm in free_models[:5]:
-                            pool.append({
-                                "model": f"openrouter/{fm['id']}",
-                                "api_key": settings.openrouter_api_key,
-                                "label": f"OpenRouter (Free: {fm['id']})",
-                            })
+                            pool.append(
+                                {
+                                    "model": f"openrouter/{fm['id']}",
+                                    "api_key": settings.openrouter_api_key,
+                                    "label": f"OpenRouter (Free: {fm['id']})",
+                                }
+                            )
             except Exception as e:
                 logger.warning(f"Could not fetch dynamic OpenRouter free-tier models: {e}. Skipping free fallback.")
 
@@ -190,15 +204,15 @@ class LLMEngine:
                 # a provider for the rest of the session. Everything else (rate limits,
                 # timeouts, one-off validation misses) falls back for THIS call only, so the
                 # next call still starts from the best provider instead of staying downgraded.
-                is_permanent = isinstance(e, (exceptions.AuthenticationError, exceptions.NotFoundError)) or \
-                                any(word in err_str for word in FATAL_ERROR_KEYWORDS)
+                is_permanent = isinstance(e, (exceptions.AuthenticationError, exceptions.NotFoundError)) or any(
+                    word in err_str for word in FATAL_ERROR_KEYWORDS
+                )
 
                 self.stats.record_failure()
                 last_exception = e
                 if is_permanent:
                     logger.warning(
-                        f"Provider {provider['label']} permanently unavailable this session "
-                        f"({err_desc}); blacklisting."
+                        f"Provider {provider['label']} permanently unavailable this session ({err_desc}); blacklisting."
                     )
                     self._blacklisted.add(idx)
                 else:
@@ -280,10 +294,15 @@ class LLMEngine:
         async with self.claude_cli_semaphore:
             start = time.monotonic()
             proc = await asyncio.create_subprocess_exec(
-                "claude", "-p", prompt,
-                "--output-format", "json",
-                "--json-schema", json.dumps(schema),
-                "--model", "claude-haiku-4-5-20251001",
+                "claude",
+                "-p",
+                prompt,
+                "--output-format",
+                "json",
+                "--json-schema",
+                json.dumps(schema),
+                "--model",
+                "claude-haiku-4-5-20251001",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 env=env,
@@ -326,13 +345,16 @@ class LLMEngine:
 
     async def generate_mutation(self, prompt: str, temperature: float = None) -> "MutationOutput":
         from blindmind.llm_schemas import MutationOutput
+
         temp = temperature if temperature is not None else settings.variation_temperature
         messages = [{"role": "user", "content": prompt}]
         return await self._completion(messages, temp, MutationOutput)
 
     async def critique_mutation(self, prompt: str) -> "CriticScore":
         from blindmind.llm_schemas import CriticScore
+
         messages = [{"role": "user", "content": prompt}]
         return await self._completion(messages, settings.critic_temperature, CriticScore)
+
 
 llm_engine = LLMEngine()

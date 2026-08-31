@@ -17,6 +17,7 @@ Directive requires implementability inside the EXISTING codebase
 function replacing throttle()/batch_step()) -- NOT a new environment,
 per the project's own note that new ideas should extend this asset.
 """
+
 import asyncio
 import logging
 
@@ -145,8 +146,9 @@ async def main():
     async for session in get_async_session():
         seed_concepts = []
         for s in SEEDS:
-            c = Concept(project=PROJECT, domain=s["domain"], title=s["title"],
-                        description=s["description"], generation=0)
+            c = Concept(
+                project=PROJECT, domain=s["domain"], title=s["title"], description=s["description"], generation=0
+            )
             await save_concept(session, c)
             seed_concepts.append(c)
         log.info(f"Seeded {len(seed_concepts)} concepts into project '{PROJECT}'")
@@ -165,8 +167,9 @@ async def main():
         break
 
     s = llm_engine.stats.summary
-    log.info(f"LLM: {s['total_calls']} calls, {s.get('failed', 0)} failed, "
-             f"{s['input_tokens'] + s['output_tokens']:,} tokens")
+    log.info(
+        f"LLM: {s['total_calls']} calls, {s.get('failed', 0)} failed, {s['input_tokens'] + s['output_tokens']:,} tokens"
+    )
 
 
 if __name__ == "__main__":

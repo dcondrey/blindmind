@@ -13,6 +13,7 @@ fixed 4-model panel producing one deep lateral spark per turn; this one runs BVS
 crossover/mutation loop over a seed population, which explores by recombining concepts rather
 than single-model association, so it is a genuinely different generator, not a redundant one.
 """
+
 import asyncio
 import logging
 
@@ -20,7 +21,7 @@ from blindmind.config import settings
 
 settings.variation_temperature = 1.2
 settings.critic_temperature = 0.1
-settings.critic_threshold = 2.0           # capture candidates for human curation; I am the filter, not the critic
+settings.critic_threshold = 2.0  # capture candidates for human curation; I am the filter, not the critic
 settings.crossover_rate = 0.6
 settings.point_mutation_rate = 0.3
 # Serial, not the usual default: this project's directive is long enough (register
@@ -97,35 +98,53 @@ DIRECTIVE0 = (
 )
 
 SEEDS = [
-    ("dynamics", "Non-uniform Bernoulli mixing gap",
-     "The center column is conjectured normal/equidistributed (P2), but the map is only "
-     "left-permutive, not two-sided permutive like Rule 90's additive structure -- so any measure "
-     "argument needs a substitute for the missing algebraic symmetry group. What replaces group "
-     "invariance when the only symmetry is one-sided?"),
-    ("complexity", "Omega(n) lower bound via incompressibility of the trace",
-     "P3 asks whether determining cell n requires simulating ~n steps. A genuine lower bound needs "
-     "an argument that no shortcut circuit of subquadratic size can predict the column, without "
-     "assuming an unproven circuit lower bound as a black box."),
-    ("algebra", "GF(2) polynomial degree growth of the reachable-state map",
-     "Rule 30 update is x_i' = x_{i-1} XOR (x_i OR x_i+1) = x_{i-1} XOR x_i XOR x_i+1 XOR x_i x_i+1 "
-     "-- the AND term is the entire source of non-linearity and the entire reason Rule 30 differs "
-     "from Rule 90's purely linear (XOR-only) update. Any argument that does not use this AND term "
-     "explicitly is Rule-90-blind and dies immediately."),
-    ("combinatorics", "Preimage tree branching asymmetry",
-     "Rule 30 is not injective (multiple predecessor rows map to the same successor row); Rule 90 "
-     "restricted to the relevant coset also has structured non-injectivity. The known counting "
-     "route failed to turn preimage-count asymmetry into a lower bound -- what invariant of the "
-     "preimage TREE's shape (not just its size) survives the Rule-90 comparison?"),
-    ("logic", "Forcing/obligation propagation past the O(log t) wall",
-     "Known result: determining the center cell at time t forces roughly the outermost O(log t) "
-     "bits of the initial row (bounded light-cone argument), and this wall has resisted every "
-     "attempt to push further. What kind of dependency would have to exist BETWEEN forced bits "
-     "(not just a bigger forced SET) to break past a purely width-based wall?"),
-    ("statistics", "Finite-window predicate insufficiency for infinite non-periodicity",
-     "A finite window of the column can never, by itself, certify non-periodicity of an infinite "
-     "sequence (any finite prefix is consistent with eventual periodicity). What OTHER kind of "
-     "finite, checkable object (not a window of values) could certify non-periodicity the way a "
-     "continued-fraction tail can certify irrationality?"),
+    (
+        "dynamics",
+        "Non-uniform Bernoulli mixing gap",
+        "The center column is conjectured normal/equidistributed (P2), but the map is only "
+        "left-permutive, not two-sided permutive like Rule 90's additive structure -- so any measure "
+        "argument needs a substitute for the missing algebraic symmetry group. What replaces group "
+        "invariance when the only symmetry is one-sided?",
+    ),
+    (
+        "complexity",
+        "Omega(n) lower bound via incompressibility of the trace",
+        "P3 asks whether determining cell n requires simulating ~n steps. A genuine lower bound needs "
+        "an argument that no shortcut circuit of subquadratic size can predict the column, without "
+        "assuming an unproven circuit lower bound as a black box.",
+    ),
+    (
+        "algebra",
+        "GF(2) polynomial degree growth of the reachable-state map",
+        "Rule 30 update is x_i' = x_{i-1} XOR (x_i OR x_i+1) = x_{i-1} XOR x_i XOR x_i+1 XOR x_i x_i+1 "
+        "-- the AND term is the entire source of non-linearity and the entire reason Rule 30 differs "
+        "from Rule 90's purely linear (XOR-only) update. Any argument that does not use this AND term "
+        "explicitly is Rule-90-blind and dies immediately.",
+    ),
+    (
+        "combinatorics",
+        "Preimage tree branching asymmetry",
+        "Rule 30 is not injective (multiple predecessor rows map to the same successor row); Rule 90 "
+        "restricted to the relevant coset also has structured non-injectivity. The known counting "
+        "route failed to turn preimage-count asymmetry into a lower bound -- what invariant of the "
+        "preimage TREE's shape (not just its size) survives the Rule-90 comparison?",
+    ),
+    (
+        "logic",
+        "Forcing/obligation propagation past the O(log t) wall",
+        "Known result: determining the center cell at time t forces roughly the outermost O(log t) "
+        "bits of the initial row (bounded light-cone argument), and this wall has resisted every "
+        "attempt to push further. What kind of dependency would have to exist BETWEEN forced bits "
+        "(not just a bigger forced SET) to break past a purely width-based wall?",
+    ),
+    (
+        "statistics",
+        "Finite-window predicate insufficiency for infinite non-periodicity",
+        "A finite window of the column can never, by itself, certify non-periodicity of an infinite "
+        "sequence (any finite prefix is consistent with eventual periodicity). What OTHER kind of "
+        "finite, checkable object (not a window of values) could certify non-periodicity the way a "
+        "continued-fraction tail can certify irrationality?",
+    ),
 ]
 
 
@@ -133,9 +152,15 @@ async def main():
     directive = DIRECTIVE0
     async for session in get_async_session():
         for concept_domain, title, description in SEEDS:
-            seed = Concept(project=PROJECT, domain=concept_domain, title=title,
-                            description=description, generation=0, fitness_score=None,
-                            tags="seed")
+            seed = Concept(
+                project=PROJECT,
+                domain=concept_domain,
+                title=title,
+                description=description,
+                generation=0,
+                fitness_score=None,
+                tags="seed",
+            )
             await save_concept(session, seed, parent_ids=[], mutation_type=None)
         for gen in range(1, GENERATIONS + 1):
             log.info(f"=== Generation {gen} ===")
@@ -158,8 +183,10 @@ async def main():
                 )
                 await save_concept(session, concept, parent_ids=parent_ids, mutation_type=m_type)
                 saved.append((critique.evolutionary_directive, critique.composite_score))
-                log.info(f"  kept [{mutation.domain}] {mutation.title} "
-                         f"(score {critique.composite_score:.1f}, priorArt {critique.prior_art_overlap}/10)")
+                log.info(
+                    f"  kept [{mutation.domain}] {mutation.title} "
+                    f"(score {critique.composite_score:.1f}, priorArt {critique.prior_art_overlap}/10)"
+                )
 
             try:
                 # Outer sanity ceiling, not the real hang bound (that's llm.py's
@@ -180,8 +207,9 @@ async def main():
         break
 
     s = llm_engine.stats.summary
-    log.info(f"LLM: {s['total_calls']} calls, {s.get('failed', 0)} failed, "
-             f"{s['input_tokens'] + s['output_tokens']:,} tokens")
+    log.info(
+        f"LLM: {s['total_calls']} calls, {s.get('failed', 0)} failed, {s['input_tokens'] + s['output_tokens']:,} tokens"
+    )
 
 
 if __name__ == "__main__":

@@ -22,6 +22,7 @@ idea (to a real congruence subgroup Gamma_0(N), where nontrivial
 characters actually exist); this run is for genuinely new angles, not a
 third pass at the same narrow question.
 """
+
 import asyncio
 import logging
 
@@ -29,7 +30,7 @@ from blindmind.config import settings
 
 settings.variation_temperature = 1.2
 settings.critic_temperature = 0.1
-settings.critic_threshold = 2.0   # capture candidates for human curation; I am the filter, not the critic
+settings.critic_threshold = 2.0  # capture candidates for human curation; I am the filter, not the critic
 settings.crossover_rate = 0.6
 settings.point_mutation_rate = 0.3
 settings.max_concurrent_calls = 3
@@ -89,8 +90,9 @@ async def main():
         break
 
     s = llm_engine.stats.summary
-    log.info(f"LLM: {s['total_calls']} calls, {s.get('failed', 0)} failed, "
-             f"{s['input_tokens'] + s['output_tokens']:,} tokens")
+    log.info(
+        f"LLM: {s['total_calls']} calls, {s.get('failed', 0)} failed, {s['input_tokens'] + s['output_tokens']:,} tokens"
+    )
 
 
 if __name__ == "__main__":

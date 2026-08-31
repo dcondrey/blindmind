@@ -18,11 +18,13 @@ if db_path and "/" in db_path:
 engine = create_async_engine(settings.database_url)
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
+
 async def init_db():
     logger.info("Initializing database...")
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
     await _migrate_add_project_column()
+
 
 async def _migrate_add_project_column():
     async with engine.begin() as conn:
@@ -37,9 +39,11 @@ async def _migrate_add_project_column():
             await conn.execute(text("ALTER TABLE evolutionrun ADD COLUMN project VARCHAR DEFAULT 'default'"))
             logger.info("Migrated: added 'project' column to evolutionrun table")
 
+
 async def get_async_session() -> AsyncSession:
     async with async_session() as session:
         yield session
+
 
 async def save_concept(session: AsyncSession, concept: Concept, parent_ids: list = None, mutation_type=None):
     session.add(concept)
@@ -54,6 +58,7 @@ async def save_concept(session: AsyncSession, concept: Concept, parent_ids: list
 
     return concept
 
+
 async def get_random_concepts(session: AsyncSession, count: int, generation: int = None, project: str = None):
     statement = select(Concept)
     if project:
@@ -64,6 +69,7 @@ async def get_random_concepts(session: AsyncSession, count: int, generation: int
     statement = statement.order_by(func.random()).limit(count)
     result = await session.execute(statement)
     return result.scalars().all()
+
 
 async def get_tournament_concepts(session: AsyncSession, count: int, tournament_size: int = 5, project: str = None):
     selected = []
@@ -85,6 +91,7 @@ async def get_tournament_concepts(session: AsyncSession, count: int, tournament_
 
     return selected
 
+
 async def create_run(
     session: AsyncSession,
     config_json: str = None,
@@ -103,6 +110,7 @@ async def create_run(
     await session.refresh(run)
     return run
 
+
 async def search_concepts(
     session: AsyncSession,
     query: str = None,
@@ -120,9 +128,7 @@ async def search_concepts(
         statement = statement.where(Concept.project == project)
     if query:
         pattern = f"%{query}%"
-        statement = statement.where(
-            (Concept.title.ilike(pattern)) | (Concept.description.ilike(pattern))
-        )
+        statement = statement.where((Concept.title.ilike(pattern)) | (Concept.description.ilike(pattern)))
     if domain:
         statement = statement.where(Concept.domain.ilike(f"%{domain}%"))
     if min_fitness is not None:
@@ -138,6 +144,7 @@ async def search_concepts(
     statement = statement.order_by(Concept.created_at.desc()).limit(limit)
     result = await session.execute(statement)
     return result.scalars().all()
+
 
 async def get_stats(session: AsyncSession, project: str = None) -> dict:
     base = select(func.count(Concept.id))
@@ -163,31 +170,34 @@ async def get_stats(session: AsyncSession, project: str = None) -> dict:
 
     max_gen = (await session.execute(_where(select(func.max(Concept.generation))))).scalar() or 0
     avg_fitness = (
-        await session.execute(
-            _where(select(func.avg(Concept.fitness_score)).where(Concept.fitness_score.isnot(None)))
-        )
+        await session.execute(_where(select(func.avg(Concept.fitness_score)).where(Concept.fitness_score.isnot(None))))
     ).scalar() or 0
     max_fitness = (await session.execute(_where(select(func.max(Concept.fitness_score))))).scalar() or 0
     min_fitness = (
-        await session.execute(
-            _where(select(func.min(Concept.fitness_score)).where(Concept.fitness_score.isnot(None)))
-        )
+        await session.execute(_where(select(func.min(Concept.fitness_score)).where(Concept.fitness_score.isnot(None))))
     ).scalar() or 0
     domains = (await session.execute(_where(select(func.count(func.distinct(Concept.domain)))))).scalar() or 0
     seeds = (await session.execute(_where(select(func.count(Concept.id)).where(Concept.generation == 0)))).scalar() or 0
     evolved = total - seeds
 
-    gen_rows = (await session.execute(
-        _where(select(Concept.generation, func.count(Concept.id)).group_by(Concept.generation))
-    )).all()
+    gen_rows = (
+        await session.execute(_where(select(Concept.generation, func.count(Concept.id)).group_by(Concept.generation)))
+    ).all()
     gen_dist = dict.fromkeys(range(max_gen + 1), 0)
     gen_dist.update({gen: count for gen, count in gen_rows})
 
     return {
-        "total": total, "generations": max_gen, "avg_fitness": round(avg_fitness, 2),
-        "max_fitness": round(max_fitness, 2), "min_fitness": round(min_fitness, 2),
-        "domains": domains, "seeds": seeds, "evolved": evolved, "gen_distribution": gen_dist,
+        "total": total,
+        "generations": max_gen,
+        "avg_fitness": round(avg_fitness, 2),
+        "max_fitness": round(max_fitness, 2),
+        "min_fitness": round(min_fitness, 2),
+        "domains": domains,
+        "seeds": seeds,
+        "evolved": evolved,
+        "gen_distribution": gen_dist,
     }
+
 
 async def get_domain_distribution(session: AsyncSession, project: str = None) -> dict:
     stmt = select(Concept)
@@ -198,6 +208,7 @@ async def get_domain_distribution(session: AsyncSession, project: str = None) ->
     for c in concepts:
         dist[c.domain] = dist.get(c.domain, 0) + 1
     return dist
+
 
 async def get_diverse_parents(
     session: AsyncSession, count: int = 2, tournament_size: int = 5, project: str = None
@@ -224,23 +235,30 @@ async def get_diverse_parents(
 
     return selected
 
+
 async def get_latent_space_sample(session: AsyncSession, limit: int = 15, project: str = None) -> list:
     def _proj(stmt):
         if project:
             return stmt.where(Concept.project == project)
         return stmt
 
-    top_fitness = (await session.execute(
-        _proj(select(Concept).where(Concept.fitness_score.isnot(None))).order_by(Concept.fitness_score.desc()).limit(5)
-    )).scalars().all()
+    top_fitness = (
+        (
+            await session.execute(
+                _proj(select(Concept).where(Concept.fitness_score.isnot(None)))
+                .order_by(Concept.fitness_score.desc())
+                .limit(5)
+            )
+        )
+        .scalars()
+        .all()
+    )
 
-    recent = (await session.execute(
-        _proj(select(Concept)).order_by(Concept.created_at.desc()).limit(5)
-    )).scalars().all()
+    recent = (
+        (await session.execute(_proj(select(Concept)).order_by(Concept.created_at.desc()).limit(5))).scalars().all()
+    )
 
-    random_sample = (await session.execute(
-        _proj(select(Concept)).order_by(func.random()).limit(5)
-    )).scalars().all()
+    random_sample = (await session.execute(_proj(select(Concept)).order_by(func.random()).limit(5))).scalars().all()
 
     seen = set()
     result = []
@@ -252,18 +270,26 @@ async def get_latent_space_sample(session: AsyncSession, limit: int = 15, projec
             break
     return result
 
+
 async def get_projects(session: AsyncSession) -> list:
     result = await session.execute(select(func.distinct(Concept.project)))
     return [r[0] for r in result.all()]
+
 
 async def delete_concept(session: AsyncSession, concept_id) -> bool:
     concept = (await session.execute(select(Concept).where(Concept.id == concept_id))).scalars().first()
     if not concept:
         return False
 
-    lineages = (await session.execute(
-        select(Lineage).where((Lineage.child_id == concept_id) | (Lineage.parent_id == concept_id))
-    )).scalars().all()
+    lineages = (
+        (
+            await session.execute(
+                select(Lineage).where((Lineage.child_id == concept_id) | (Lineage.parent_id == concept_id))
+            )
+        )
+        .scalars()
+        .all()
+    )
     for link in lineages:
         await session.delete(link)
 

@@ -8,6 +8,7 @@ detached (nohup) since the Bash tool's ~10 minute foreground/background
 kill ceiling killed the first same-session retry attempt before it could
 produce any output.
 """
+
 import asyncio
 import logging
 
@@ -73,8 +74,9 @@ async def main():
         log.info(f"Gen 1: {len(survivors)} retained")
         break
     s = llm_engine.stats.summary
-    log.info(f"LLM: {s['total_calls']} calls, {s.get('failed', 0)} failed, "
-             f"{s['input_tokens'] + s['output_tokens']:,} tokens")
+    log.info(
+        f"LLM: {s['total_calls']} calls, {s.get('failed', 0)} failed, {s['input_tokens'] + s['output_tokens']:,} tokens"
+    )
 
 
 if __name__ == "__main__":

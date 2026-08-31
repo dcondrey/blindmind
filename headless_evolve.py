@@ -5,16 +5,17 @@ composite score >= threshold) and persists survivors exactly as the CLI does, mi
 human prompt. Selection here is critic-only by design; real filtering is done afterward by hand
 + the deep-research literature check.
 """
+
 import asyncio
 import logging
 import os
 
 from blindmind.config import settings
 
-settings.variation_temperature = 1.3      # divergent
+settings.variation_temperature = 1.3  # divergent
 settings.critic_temperature = 0.1
-settings.critic_threshold = 2.0           # capture candidates for human curation; I am the filter, not the critic
-settings.crossover_rate = 0.7             # bias toward smashing disparate seeds together
+settings.critic_threshold = 2.0  # capture candidates for human curation; I am the filter, not the critic
+settings.crossover_rate = 0.7  # bias toward smashing disparate seeds together
 settings.point_mutation_rate = 0.2
 settings.max_concurrent_calls = 4
 
@@ -23,8 +24,9 @@ from blindmind.engine import EvolutionEngine  # noqa: E402 (settings must be set
 from blindmind.llm import llm_engine  # noqa: E402 (settings must be set before these imports)
 from blindmind.models import Concept  # noqa: E402 (settings must be set before these imports)
 
-llm_engine.providers = [{"model": "openrouter/openai/gpt-4o",
-                         "api_key": os.environ["OPENROUTER_API_KEY"], "label": "OR-gpt4o"}]
+llm_engine.providers = [
+    {"model": "openrouter/openai/gpt-4o", "api_key": os.environ["OPENROUTER_API_KEY"], "label": "OR-gpt4o"}
+]
 llm_engine._initialized = True
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -71,16 +73,19 @@ async def main():
                 )
                 await save_concept(session, concept, parent_ids=parent_ids, mutation_type=m_type)
                 weighted.append((critique.evolutionary_directive, critique.composite_score))
-                log.info(f"  kept [{mutation.domain}] {mutation.title} "
-                         f"(score {critique.composite_score:.1f}, priorArt {critique.prior_art_overlap}/10)")
+                log.info(
+                    f"  kept [{mutation.domain}] {mutation.title} "
+                    f"(score {critique.composite_score:.1f}, priorArt {critique.prior_art_overlap}/10)"
+                )
             if weighted:
                 directive = EvolutionEngine.synthesize_directives(weighted)
             log.info(f"Gen {gen}: {len(survivors)} retained")
         break
 
     s = llm_engine.stats.summary
-    log.info(f"LLM: {s['total_calls']} calls, {s.get('failed', 0)} failed, "
-             f"{s['input_tokens'] + s['output_tokens']:,} tokens")
+    log.info(
+        f"LLM: {s['total_calls']} calls, {s.get('failed', 0)} failed, {s['input_tokens'] + s['output_tokens']:,} tokens"
+    )
 
 
 if __name__ == "__main__":

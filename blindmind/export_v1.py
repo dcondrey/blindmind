@@ -127,9 +127,7 @@ def build_export(concepts, lineages, project, directive):
         "ideas": ideas,
     }
 
-    orphan_non_seeds = sum(
-        1 for c in exported if c.generation > 0 and not parents.get(str(c.id))
-    )
+    orphan_non_seeds = sum(1 for c in exported if c.generation > 0 and not parents.get(str(c.id)))
     report = {
         "project": project,
         "concepts_in": len(by_id),
@@ -159,28 +157,31 @@ def _tally(reasons):
 
 async def export_v1_logic(file: str, project: str):
     async for session in get_async_session():
-        concepts = (
-            await session.execute(select(Concept).where(Concept.project == project))
-        ).scalars().all()
+        concepts = (await session.execute(select(Concept).where(Concept.project == project))).scalars().all()
         if not concepts:
             return None, {"project": project, "concepts_in": 0, "error": "no concepts in project"}
 
         concept_ids = {c.id for c in concepts}
         lineages = [
-            link for link in (await session.execute(select(Lineage))).scalars().all()
+            link
+            for link in (await session.execute(select(Lineage))).scalars().all()
             if link.child_id in concept_ids or link.parent_id in concept_ids
         ]
 
         from blindmind.models import EvolutionRun
 
         run = (
-            await session.execute(
-                select(EvolutionRun)
-                .where(EvolutionRun.project == project)
-                .order_by(EvolutionRun.updated_at.desc())
-                .limit(1)
+            (
+                await session.execute(
+                    select(EvolutionRun)
+                    .where(EvolutionRun.project == project)
+                    .order_by(EvolutionRun.updated_at.desc())
+                    .limit(1)
+                )
             )
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
 
         payload, report = build_export(concepts, lineages, project, run.latest_directive if run else None)
         with open(file, "w") as f:

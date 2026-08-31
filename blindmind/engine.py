@@ -23,10 +23,26 @@ from blindmind.prompts import CRITIC_PROMPT, CROSSOVER_PROMPT, INVERSION_PROMPT,
 GENERIC_TITLE_PLACEHOLDERS = {"untitled", "concept", "new concept", "n/a", "todo", "idea", "placeholder"}
 
 ALL_DOMAINS = [
-    "Biology", "Physics", "Chemistry", "Mathematics", "Computer Science",
-    "Economics", "Philosophy", "Psychology", "Sociology", "Neuroscience",
-    "Engineering", "Medicine", "Ecology", "Linguistics", "Art",
-    "Music", "Architecture", "Law", "Education", "Anthropology",
+    "Biology",
+    "Physics",
+    "Chemistry",
+    "Mathematics",
+    "Computer Science",
+    "Economics",
+    "Philosophy",
+    "Psychology",
+    "Sociology",
+    "Neuroscience",
+    "Engineering",
+    "Medicine",
+    "Ecology",
+    "Linguistics",
+    "Art",
+    "Music",
+    "Architecture",
+    "Law",
+    "Education",
+    "Anthropology",
 ]
 
 
@@ -112,8 +128,7 @@ class EvolutionEngine:
                         survivors.append(res)
                         batch_successes += 1
                         logger.info(
-                            f"Survivor: '{mutation.title}' "
-                            f"(score={critique.composite_score:.2f}, type={m_type})"
+                            f"Survivor: '{mutation.title}' (score={critique.composite_score:.2f}, type={m_type})"
                         )
                         if on_survivor is not None:
                             # Persist immediately: an outer per-generation timeout
@@ -128,8 +143,7 @@ class EvolutionEngine:
                         if critique.fatal_flaws:
                             flaws = "; ".join(critique.fatal_flaws)
                             logger.debug(
-                                f"Rejected '{mutation.title}' "
-                                f"(score={critique.composite_score:.2f}, flaws: {flaws})"
+                                f"Rejected '{mutation.title}' (score={critique.composite_score:.2f}, flaws: {flaws})"
                             )
                         self.rejected_titles.append(mutation.title)
                         consecutive_failures += 1

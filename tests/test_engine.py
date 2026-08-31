@@ -20,6 +20,7 @@ async def session_fixture():
     async with async_session() as session:
         yield session
 
+
 @pytest.mark.asyncio
 async def test_run_generation_cycle(session: AsyncSession):
     c1 = Concept(domain="D1", title="T1", description="Desc1")
@@ -39,15 +40,17 @@ async def test_run_generation_cycle(session: AsyncSession):
         evolutionary_directive="Focus on tech",
     )
 
-    with patch("blindmind.engine.llm_engine.generate_mutation", return_value=mock_mutation), \
-         patch("blindmind.engine.llm_engine.critique_mutation", return_value=mock_critique):
-
+    with (
+        patch("blindmind.engine.llm_engine.generate_mutation", return_value=mock_mutation),
+        patch("blindmind.engine.llm_engine.critique_mutation", return_value=mock_critique),
+    ):
         survivors = await engine.run_generation_cycle(generation=0, population_size=2)
         assert len(survivors) == 2
         mutation, critique, parent_ids, m_type = survivors[0]
         assert mutation.title == "New"
         assert critique.conceptual_novelty == 9
         assert len(parent_ids) > 0
+
 
 @pytest.mark.asyncio
 async def test_run_generation_cycle_with_rejections(session: AsyncSession):
@@ -75,12 +78,14 @@ async def test_run_generation_cycle_with_rejections(session: AsyncSession):
         evolutionary_directive="Double down",
     )
 
-    with patch("blindmind.engine.llm_engine.generate_mutation", return_value=mock_mutation), \
-         patch("blindmind.engine.llm_engine.critique_mutation", side_effect=[mock_critique_fail, mock_critique_pass]):
-
+    with (
+        patch("blindmind.engine.llm_engine.generate_mutation", return_value=mock_mutation),
+        patch("blindmind.engine.llm_engine.critique_mutation", side_effect=[mock_critique_fail, mock_critique_pass]),
+    ):
         survivors = await engine.run_generation_cycle(generation=0, population_size=1)
         assert len(survivors) == 1
         assert survivors[0][1].composite_score >= 7.0
+
 
 @pytest.mark.asyncio
 async def test_directive_passed_to_engine(session: AsyncSession):
@@ -92,11 +97,13 @@ async def test_directive_passed_to_engine(session: AsyncSession):
     engine = EvolutionEngine(session, directive=directive)
     assert engine.directive == directive
 
+
 @pytest.mark.asyncio
 async def test_configurable_mutation_rates(session: AsyncSession):
     engine = EvolutionEngine(session)
     assert engine.crossover_rate == 0.5
     assert engine.point_mutation_rate == 0.3
+
 
 def test_rejection_memory():
     engine = EvolutionEngine.__new__(EvolutionEngine)
@@ -158,14 +165,17 @@ async def test_prefilter_skips_critique_llm_call(session: AsyncSession):
         title="T1", domain="D1", description="Same as an existing concept.", justification="J"
     )
 
-    with patch("blindmind.engine.llm_engine.generate_mutation", return_value=duplicate_mutation) as mock_gen, \
-         patch("blindmind.engine.llm_engine.critique_mutation") as mock_critique:
+    with (
+        patch("blindmind.engine.llm_engine.generate_mutation", return_value=duplicate_mutation) as mock_gen,
+        patch("blindmind.engine.llm_engine.critique_mutation") as mock_critique,
+    ):
         result = await engine._create_point_mutation()
 
     assert result is None
     mock_gen.assert_called_once()
     mock_critique.assert_not_called()
     assert "T1" in engine.rejected_titles
+
 
 def test_rejection_memory_word_overlap():
     engine = EvolutionEngine.__new__(EvolutionEngine)
@@ -175,6 +185,7 @@ def test_rejection_memory_word_overlap():
     assert engine._is_too_similar_to_rejected("Quantum Neural Blockchain Integration") is True
     # Low word overlap
     assert engine._is_too_similar_to_rejected("Biological Swarm Computing") is False
+
 
 def test_synthesize_directives_weighted():
     directives = [
@@ -189,9 +200,11 @@ def test_synthesize_directives_weighted():
     assert "Explore physics" in result
     assert "Add art" not in result
 
+
 def test_synthesize_directives_empty():
     result = EvolutionEngine.synthesize_directives([])
     assert "novelty" in result.lower()
+
 
 def test_fatal_flaws_penalize_but_do_not_zero_composite_score():
     """Listed flaws must knock a candidate below a normal (~7.0) retention threshold
@@ -200,13 +213,21 @@ def test_fatal_flaws_penalize_but_do_not_zero_composite_score():
     divergence (see headless_evolve.py), and a candidate the critic flagged should
     still be visible to that mode rather than erased."""
     flagged = CriticScore(
-        conceptual_novelty=9, feasibility=9, utility=9, semantic_jump=9,
+        conceptual_novelty=9,
+        feasibility=9,
+        utility=9,
+        semantic_jump=9,
         fatal_flaws=["Violates conservation of energy"],
-        rationale="High scores but broken", evolutionary_directive="Try again",
+        rationale="High scores but broken",
+        evolutionary_directive="Try again",
     )
     unflagged = CriticScore(
-        conceptual_novelty=9, feasibility=9, utility=9, semantic_jump=9,
-        rationale="High scores, no flaws", evolutionary_directive="Double down",
+        conceptual_novelty=9,
+        feasibility=9,
+        utility=9,
+        semantic_jump=9,
+        rationale="High scores, no flaws",
+        evolutionary_directive="Double down",
     )
 
     assert flagged.composite_score < unflagged.composite_score
@@ -227,13 +248,19 @@ async def test_flagged_candidate_still_survives_a_permissive_threshold(session: 
     engine.adaptive_threshold = 2.0
     mock_mutation = MutationOutput(title="Flawed but interesting", domain="D", description="Desc", justification="J")
     mock_critique = CriticScore(
-        conceptual_novelty=8, feasibility=7, utility=7, semantic_jump=6,
+        conceptual_novelty=8,
+        feasibility=7,
+        utility=7,
+        semantic_jump=6,
         fatal_flaws=["Unclear how step 2 works"],
-        rationale="Promising but underspecified", evolutionary_directive="Sharpen the mechanism",
+        rationale="Promising but underspecified",
+        evolutionary_directive="Sharpen the mechanism",
     )
 
-    with patch("blindmind.engine.llm_engine.generate_mutation", return_value=mock_mutation), \
-         patch("blindmind.engine.llm_engine.critique_mutation", return_value=mock_critique):
+    with (
+        patch("blindmind.engine.llm_engine.generate_mutation", return_value=mock_mutation),
+        patch("blindmind.engine.llm_engine.critique_mutation", return_value=mock_critique),
+    ):
         survivors = await engine.run_generation_cycle(generation=0, population_size=1)
 
     assert len(survivors) == 1

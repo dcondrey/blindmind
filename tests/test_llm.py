@@ -46,19 +46,24 @@ async def test_generate_mutation_success():
         assert result.title == "Quantum Logistics"
         mock_acompletion.assert_called_once()
 
+
 @pytest.mark.asyncio
 async def test_generate_mutation_with_retries():
     engine = _engine_with_providers(THREE_PROVIDERS)
     mock_response = _mock_response('{"title": "Success", "domain": "D", "description": "Desc", "justification": "J"}')
 
-    with patch("blindmind.llm.acompletion", side_effect=[
-        exceptions.RateLimitError("Rate limit reached", model="gpt-4o-mini", llm_provider="openai"),
-        exceptions.RateLimitError("Rate limit reached", model="gpt-4o-mini", llm_provider="openai"),
-        mock_response
-    ]) as mock_acompletion:
+    with patch(
+        "blindmind.llm.acompletion",
+        side_effect=[
+            exceptions.RateLimitError("Rate limit reached", model="gpt-4o-mini", llm_provider="openai"),
+            exceptions.RateLimitError("Rate limit reached", model="gpt-4o-mini", llm_provider="openai"),
+            mock_response,
+        ],
+    ) as mock_acompletion:
         result = await engine.generate_mutation("Test prompt")
         assert result.title == "Success"
         assert mock_acompletion.call_count == 3
+
 
 @pytest.mark.asyncio
 async def test_critique_mutation():
@@ -74,6 +79,7 @@ async def test_critique_mutation():
         result = await engine.critique_mutation("Test prompt")
         assert isinstance(result, CriticScore)
         assert result.semantic_jump == 7
+
 
 def test_llm_stats_tracking():
     stats = LLMStats()
@@ -101,10 +107,13 @@ async def test_transient_failure_falls_back_without_blacklisting():
         '{"title": "T", "domain": "D", "description": "Desc", "justification": "J"}', in_tok=10, out_tok=10
     )
 
-    with patch("blindmind.llm.acompletion", side_effect=[
-        exceptions.RateLimitError("limited", model="m", llm_provider="p"),
-        good_response,
-    ]) as mock_acompletion:
+    with patch(
+        "blindmind.llm.acompletion",
+        side_effect=[
+            exceptions.RateLimitError("limited", model="m", llm_provider="p"),
+            good_response,
+        ],
+    ) as mock_acompletion:
         await engine.generate_mutation("prompt 1")
         assert mock_acompletion.call_count == 2
         assert engine._blacklisted == set()
@@ -121,10 +130,13 @@ async def test_auth_failure_blacklists_provider_for_session():
         '{"title": "T", "domain": "D", "description": "Desc", "justification": "J"}', in_tok=10, out_tok=10
     )
 
-    with patch("blindmind.llm.acompletion", side_effect=[
-        exceptions.AuthenticationError("bad key", model="m", llm_provider="p"),
-        good_response,
-    ]):
+    with patch(
+        "blindmind.llm.acompletion",
+        side_effect=[
+            exceptions.AuthenticationError("bad key", model="m", llm_provider="p"),
+            good_response,
+        ],
+    ):
         await engine.generate_mutation("prompt 1")
         assert engine._blacklisted == {0}
 

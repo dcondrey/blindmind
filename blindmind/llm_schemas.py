@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, Field
 
 
@@ -7,6 +6,7 @@ class MutationOutput(BaseModel):
     domain: str = Field(..., description="The primary domain of the new concept")
     description: str = Field(..., description="Detailed description of the concept and its mechanics")
     justification: str = Field(..., description="Why this combination/mutation results in a novel idea")
+
 
 class CriticScore(BaseModel):
     conceptual_novelty: int = Field(..., ge=1, le=10, description="How unique is this combination?")

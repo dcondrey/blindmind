@@ -27,6 +27,7 @@ async def session_fixture():
     async with async_session() as session:
         yield session
 
+
 @pytest.mark.asyncio
 async def test_save_concept_with_lineage(session: AsyncSession):
     p1 = Concept(domain="Biology", title="Cell", description="Basic unit")
@@ -45,6 +46,7 @@ async def test_save_concept_with_lineage(session: AsyncSession):
     assert lineage.parent_id == p1.id
     assert lineage.mutation_type == MutationType.POINT_MUTATION
 
+
 @pytest.mark.asyncio
 async def test_get_random_concepts(session: AsyncSession):
     for i in range(10):
@@ -55,6 +57,7 @@ async def test_get_random_concepts(session: AsyncSession):
     randoms = await get_random_concepts(session, count=3)
     assert len(randoms) == 3
     assert len(set([r.id for r in randoms])) == 3
+
 
 @pytest.mark.asyncio
 async def test_tournament_deduplication(session: AsyncSession):
@@ -67,6 +70,7 @@ async def test_tournament_deduplication(session: AsyncSession):
     assert len(selected) == 3
     ids = [c.id for c in selected]
     assert len(set(ids)) == 3
+
 
 @pytest.mark.asyncio
 async def test_search_by_keyword(session: AsyncSession):
@@ -82,6 +86,7 @@ async def test_search_by_keyword(session: AsyncSession):
     assert "Quantum Biology" in titles
     assert "Quantum Computing" in titles
 
+
 @pytest.mark.asyncio
 async def test_search_by_domain(session: AsyncSession):
     c1 = Concept(domain="Biology", title="Cell", description="Basic unit")
@@ -92,6 +97,7 @@ async def test_search_by_domain(session: AsyncSession):
     results = await search_concepts(session, domain="biology")
     assert len(results) == 1
     assert results[0].title == "Cell"
+
 
 @pytest.mark.asyncio
 async def test_search_by_fitness_range(session: AsyncSession):
@@ -107,6 +113,7 @@ async def test_search_by_fitness_range(session: AsyncSession):
     assert "Mid" in titles
     assert "High" in titles
 
+
 @pytest.mark.asyncio
 async def test_search_by_tags(session: AsyncSession):
     c1 = Concept(domain="D1", title="T1", description="d", tags="biology,quantum")
@@ -117,6 +124,7 @@ async def test_search_by_tags(session: AsyncSession):
     results = await search_concepts(session, tags="quantum")
     assert len(results) == 1
     assert results[0].title == "T1"
+
 
 @pytest.mark.asyncio
 async def test_get_stats(session: AsyncSession):
@@ -134,6 +142,7 @@ async def test_get_stats(session: AsyncSession):
     assert stats["generations"] == 1
     assert stats["avg_fitness"] == 8.5
     assert stats["max_fitness"] == 8.5
+
 
 @pytest.mark.asyncio
 async def test_delete_concept(session: AsyncSession):
@@ -159,17 +168,21 @@ async def test_delete_concept(session: AsyncSession):
     parent_check = (await session.execute(select(Concept).where(Concept.id == p1.id))).scalars().first()
     assert parent_check is not None
 
+
 @pytest.mark.asyncio
 async def test_delete_nonexistent_concept(session: AsyncSession):
     from uuid import uuid4
+
     result = await delete_concept(session, uuid4())
     assert result is False
+
 
 @pytest.mark.asyncio
 async def test_stats_empty_db(session: AsyncSession):
     stats = await get_stats(session)
     assert stats["total"] == 0
     assert stats["avg_fitness"] == 0
+
 
 @pytest.mark.asyncio
 async def test_diverse_parents_prefer_different_domains(session: AsyncSession):
@@ -183,18 +196,22 @@ async def test_diverse_parents_prefer_different_domains(session: AsyncSession):
     # Should prefer different domains
     assert parents[0].domain != parents[1].domain
 
+
 @pytest.mark.asyncio
 async def test_get_domain_distribution(session: AsyncSession):
-    session.add_all([
-        Concept(domain="Biology", title="T1", description="d"),
-        Concept(domain="Biology", title="T2", description="d"),
-        Concept(domain="Physics", title="T3", description="d"),
-    ])
+    session.add_all(
+        [
+            Concept(domain="Biology", title="T1", description="d"),
+            Concept(domain="Biology", title="T2", description="d"),
+            Concept(domain="Physics", title="T3", description="d"),
+        ]
+    )
     await session.commit()
 
     dist = await get_domain_distribution(session)
     assert dist["Biology"] == 2
     assert dist["Physics"] == 1
+
 
 @pytest.mark.asyncio
 async def test_latent_space_sample(session: AsyncSession):

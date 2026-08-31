@@ -16,6 +16,7 @@ uncited/fabricated formulas, category errors (proposing a mechanism that
 doesn't apply to the actual object in question), and vague metaphor
 recombination with no concrete next step.
 """
+
 import asyncio
 import logging
 
@@ -23,7 +24,7 @@ from blindmind.config import settings
 
 settings.variation_temperature = 1.2
 settings.critic_temperature = 0.1
-settings.critic_threshold = 2.0   # capture candidates for human curation; I am the filter, not the critic
+settings.critic_threshold = 2.0  # capture candidates for human curation; I am the filter, not the critic
 settings.crossover_rate = 0.6
 settings.point_mutation_rate = 0.3
 settings.max_concurrent_calls = 3
@@ -143,8 +144,9 @@ async def main():
     async for session in get_async_session():
         seed_concepts = []
         for s in SEEDS:
-            c = Concept(project=PROJECT, domain=s["domain"], title=s["title"],
-                        description=s["description"], generation=0)
+            c = Concept(
+                project=PROJECT, domain=s["domain"], title=s["title"], description=s["description"], generation=0
+            )
             await save_concept(session, c)
             seed_concepts.append(c)
         log.info(f"Seeded {len(seed_concepts)} concepts into project '{PROJECT}'")
@@ -166,8 +168,9 @@ async def main():
         break
 
     s = llm_engine.stats.summary
-    log.info(f"LLM: {s['total_calls']} calls, {s.get('failed', 0)} failed, "
-             f"{s['input_tokens'] + s['output_tokens']:,} tokens")
+    log.info(
+        f"LLM: {s['total_calls']} calls, {s.get('failed', 0)} failed, {s['input_tokens'] + s['output_tokens']:,} tokens"
+    )
 
 
 if __name__ == "__main__":

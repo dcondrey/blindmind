@@ -80,6 +80,7 @@ class Settings(BaseSettings):
             f.write("\n".join(f"{k}={v}" for k, v in existing.items()))
         os.chmod(".env", 0o600)
 
+
 def discover_api_keys():
     """Aggressively search for API keys in environment and dotfiles."""
     s = Settings()
@@ -129,5 +130,6 @@ def discover_api_keys():
                 continue
 
     return s
+
 
 settings = discover_api_keys()
