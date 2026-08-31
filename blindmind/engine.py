@@ -1,6 +1,7 @@
 import asyncio
 import random
 from collections.abc import Awaitable, Callable
+from difflib import SequenceMatcher
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,6 +19,8 @@ from blindmind.llm_schemas import CriticScore, MutationOutput
 from blindmind.logging import logger
 from blindmind.models import Concept, MutationType
 from blindmind.prompts import CRITIC_PROMPT, CROSSOVER_PROMPT, INVERSION_PROMPT, POINT_MUTATION_PROMPT, WILDCARD_PROMPT
+
+GENERIC_TITLE_PLACEHOLDERS = {"untitled", "concept", "new concept", "n/a", "todo", "idea", "placeholder"}
 
 ALL_DOMAINS = [
     "Biology", "Physics", "Chemistry", "Mathematics", "Computer Science",
@@ -37,6 +40,14 @@ class EvolutionEngine:
         self.inversion_rate = settings.inversion_rate
         self.rejected_titles: list[str] = []
         self.adaptive_threshold = settings.critic_threshold
+        # Last exception raised while creating a candidate (generate_mutation or
+        # critique_mutation failing outright, e.g. no configured provider, all
+        # providers exhausted). run_generation_cycle otherwise just returns an empty
+        # survivors list, which reads identically to "everyone scored below
+        # threshold" -- this lets the caller (cli.py) tell those two very different
+        # situations apart and surface the real cause instead of a misleading
+        # "try lowering the threshold" suggestion.
+        self.last_error: str | None = None
         self._latent_context = None
         self._existing_titles = None
         self._domain_dist = None
@@ -174,9 +185,10 @@ class EvolutionEngine:
 
             mutation = await llm_engine.generate_mutation(prompt)
 
-            # Rejection memory: skip if too similar to previously rejected
-            if self._is_too_similar_to_rejected(mutation.title):
-                logger.debug(f"Skipped '{mutation.title}' (too similar to rejected concept)")
+            reject_reason = self._prefilter_reject(mutation)
+            if reject_reason:
+                logger.debug(f"Pre-filtered '{mutation.title}' before critique ({reject_reason})")
+                self.rejected_titles.append(mutation.title)
                 return None
 
             critique = await llm_engine.critique_mutation(
@@ -188,6 +200,7 @@ class EvolutionEngine:
             raise
         except Exception as e:
             logger.error(f"Error creating candidate: {e}")
+            self.last_error = str(e)
             return None
 
     async def _create_point_mutation(self) -> tuple[MutationOutput, CriticScore, list[UUID], MutationType] | None:
@@ -203,8 +216,10 @@ class EvolutionEngine:
         )
         mutation = await llm_engine.generate_mutation(prompt)
 
-        if self._is_too_similar_to_rejected(mutation.title):
-            logger.debug(f"Skipped '{mutation.title}' (too similar to rejected concept)")
+        reject_reason = self._prefilter_reject(mutation)
+        if reject_reason:
+            logger.debug(f"Pre-filtered '{mutation.title}' before critique ({reject_reason})")
+            self.rejected_titles.append(mutation.title)
             return None
 
         critique = await llm_engine.critique_mutation(
@@ -220,13 +235,64 @@ class EvolutionEngine:
         )
         mutation = await llm_engine.generate_mutation(prompt)
 
-        if self._is_too_similar_to_rejected(mutation.title):
+        reject_reason = self._prefilter_reject(mutation)
+        if reject_reason:
+            logger.debug(f"Pre-filtered '{mutation.title}' before critique ({reject_reason})")
+            self.rejected_titles.append(mutation.title)
             return None
 
         critique = await llm_engine.critique_mutation(
             CRITIC_PROMPT.render(mutation=mutation, existing_titles=self._existing_titles)
         )
         return mutation, critique, [], MutationType.WILDCARD
+
+    def _is_degenerate(self, mutation: MutationOutput) -> bool:
+        """Catches structurally empty/placeholder candidates -- not just substantively
+        weak ones -- so they never cost a critique round-trip at all."""
+        title = (mutation.title or "").strip()
+        desc = (mutation.description or "").strip()
+        if not title or not desc:
+            return True
+        if title.lower() in GENERIC_TITLE_PLACEHOLDERS:
+            return True
+        return False
+
+    def _find_near_duplicate(self, title: str) -> str | None:
+        """Fuzzy-matches a candidate title against both prior critic rejections and
+        concepts already saved in this project (self._existing_titles), using
+        difflib.SequenceMatcher so paraphrased near-repeats -- not just literal
+        substrings -- are caught before the second LLM round-trip (critique_mutation).
+        Returns the matched title, or None."""
+        title_norm = (title or "").strip().lower()
+        if not title_norm:
+            return None
+        pool = list(self.rejected_titles[-50:])
+        if self._existing_titles:
+            # Entries look like "[Domain] Title"; compare against the title part only.
+            pool += [t.split("] ", 1)[-1] for t in self._existing_titles]
+        for other in pool:
+            other_norm = (other or "").strip().lower()
+            if not other_norm:
+                continue
+            if title_norm == other_norm:
+                return other
+            if SequenceMatcher(None, title_norm, other_norm).ratio() > 0.85:
+                return other
+        return None
+
+    def _prefilter_reject(self, mutation: MutationOutput) -> str | None:
+        """Local, dependency-free pre-critique filter. Rejects degenerate or
+        near-duplicate candidates without spending the second LLM round-trip
+        (critique_mutation) on them. Returns a short rejection reason, or None if
+        the candidate should proceed to critique."""
+        if self._is_degenerate(mutation):
+            return "degenerate (empty/near-empty description or placeholder title)"
+        dup = self._find_near_duplicate(mutation.title)
+        if dup:
+            return f"near-duplicate of existing/rejected title '{dup}'"
+        if self._is_too_similar_to_rejected(mutation.title):
+            return "high word-overlap with a recently rejected title"
+        return None
 
     def _is_too_similar_to_rejected(self, title: str) -> bool:
         title_lower = title.lower()

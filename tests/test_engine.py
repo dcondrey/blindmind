@@ -85,6 +85,59 @@ def test_rejection_memory():
     assert engine._is_too_similar_to_rejected("quantum blockchain integration") is True
     assert engine._is_too_similar_to_rejected("Mycelial Computing") is False
 
+
+def test_prefilter_rejects_degenerate_candidate():
+    """Empty description or a generic placeholder title should be caught locally,
+    without ever reaching critique_mutation."""
+    engine = EvolutionEngine.__new__(EvolutionEngine)
+    engine.rejected_titles = []
+    engine._existing_titles = None
+
+    empty_desc = MutationOutput(title="Real Title", domain="D", description="   ", justification="J")
+    assert engine._prefilter_reject(empty_desc) is not None
+
+    placeholder_title = MutationOutput(title="Untitled", domain="D", description="A real description here.", justification="J")
+    assert engine._prefilter_reject(placeholder_title) is not None
+
+    fine = MutationOutput(title="Mycelial Computing", domain="D", description="A real description.", justification="J")
+    assert engine._prefilter_reject(fine) is None
+
+
+def test_prefilter_rejects_near_duplicate_of_existing_title():
+    """A fuzzy (not just literal) match against an already-saved concept title should
+    be caught via SequenceMatcher, not just exact/word-overlap comparison."""
+    engine = EvolutionEngine.__new__(EvolutionEngine)
+    engine.rejected_titles = []
+    engine._existing_titles = ["[Biology] Mycelial Computing Networks"]
+
+    near_dup = MutationOutput(title="Mycelial Computing Network", domain="Biology", description="A real description.", justification="J")
+    assert engine._prefilter_reject(near_dup) is not None
+
+    distinct = MutationOutput(title="Quantum Ledger Ecosystems", domain="Biology", description="A real description.", justification="J")
+    assert engine._prefilter_reject(distinct) is None
+
+
+@pytest.mark.asyncio
+async def test_prefilter_skips_critique_llm_call(session: AsyncSession):
+    """The pre-filter must reject before critique_mutation is ever awaited, saving
+    the second LLM round-trip -- this is the whole point of item 1."""
+    c1 = Concept(domain="D1", title="T1", description="Desc1")
+    session.add(c1)
+    await session.commit()
+
+    engine = EvolutionEngine(session)
+    await engine._load_context()  # populates self._existing_titles from the DB, as run_generation_cycle would
+    duplicate_mutation = MutationOutput(title="T1", domain="D1", description="Same as an existing concept.", justification="J")
+
+    with patch("blindmind.engine.llm_engine.generate_mutation", return_value=duplicate_mutation) as mock_gen, \
+         patch("blindmind.engine.llm_engine.critique_mutation") as mock_critique:
+        result = await engine._create_point_mutation()
+
+    assert result is None
+    mock_gen.assert_called_once()
+    mock_critique.assert_not_called()
+    assert "T1" in engine.rejected_titles
+
 def test_rejection_memory_word_overlap():
     engine = EvolutionEngine.__new__(EvolutionEngine)
     engine.rejected_titles = ["Quantum Blockchain Neural Integration"]
