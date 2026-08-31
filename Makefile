@@ -1,4 +1,4 @@
-.PHONY: start install test init seed clean help
+.PHONY: start install test init seed clean man help
 
 help:
 	@echo "BlindMind Elite - Evolutionary Concept Refinement"
@@ -7,6 +7,7 @@ help:
 	@echo "  make start      Launch the interactive menu (Recommended)"
 	@echo "  make install    Install dependencies using uv"
 	@echo "  make test       Run the full test suite"
+	@echo "  make man        Generate man pages (docs/man/) from the live CLI"
 	@echo "  make clean      Remove virtual environment and database"
 
 start:
@@ -20,6 +21,9 @@ init:
 
 test:
 	./.venv/bin/python -m pytest -v
+
+man:
+	uv run python scripts/generate_man_pages.py
 
 clean:
 	rm -rf .venv .uv_cache data/blindmind.db data/blindmind.log .env
