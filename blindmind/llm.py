@@ -80,7 +80,11 @@ def _extract_structured_output(payload: dict) -> dict:
     """
     if payload.get("is_error"):
         logger.warning(f"claude CLI error result: {str(payload.get('result'))[:500]}")
-        raise ClaudeCLIOutputError(f"claude CLI reported an error result (subtype={payload.get('subtype')!r})")
+        # Plain RuntimeError, not ClaudeCLIOutputError: is_error is the CLI reporting a
+        # failure it already knows about (usage cap, upstream API error), so re-asking
+        # it is wasted wall clock. Kept keyword-free anyway so the raw text can't reach
+        # _completion()'s FATAL_ERROR_KEYWORDS blacklist match.
+        raise RuntimeError(f"claude CLI reported an error result (subtype={payload.get('subtype')!r})")
 
     structured = payload.get("structured_output")
     if structured is not None:
