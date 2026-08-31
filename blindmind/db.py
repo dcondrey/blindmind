@@ -1,13 +1,14 @@
 import os
-from typing import Optional
+
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlmodel import SQLModel, select
 from sqlalchemy.sql.expression import func
+from sqlmodel import SQLModel, select
+
 from blindmind.config import settings
-from blindmind.models import Concept, Lineage, EvolutionRun
 from blindmind.logging import logger
+from blindmind.models import Concept, EvolutionRun, Lineage
 
 # Ensure data directory exists
 db_path = settings.database_url.replace("sqlite+aiosqlite:///", "")

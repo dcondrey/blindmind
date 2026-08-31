@@ -29,10 +29,10 @@ settings.crossover_rate = 0.6
 settings.point_mutation_rate = 0.3
 settings.max_concurrent_calls = 3
 
-from blindmind.engine import EvolutionEngine
 from blindmind.db import get_async_session, save_concept
+from blindmind.engine import EvolutionEngine
+from blindmind.llm import CLAUDE_CLI_LABEL, llm_engine
 from blindmind.models import Concept
-from blindmind.llm import llm_engine, CLAUDE_CLI_LABEL
 
 llm_engine.providers = [{"model": "claude-cli", "api_key": None, "label": CLAUDE_CLI_LABEL}]
 llm_engine._initialized = True

@@ -1,8 +1,8 @@
-from datetime import datetime, timezone, UTC
+from datetime import UTC, datetime
 from enum import Enum
-from typing import List, Optional
 from uuid import UUID, uuid4
-from sqlmodel import Field, Relationship, SQLModel
+
+from sqlmodel import Field, SQLModel
 
 
 class MutationType(str, Enum):
@@ -35,12 +35,12 @@ class Concept(SQLModel, table=True):
     title: str
     description: str
     generation: int = Field(default=0, index=True)
-    fitness_score: Optional[float] = None
-    tags: Optional[str] = Field(default=None, description="Comma-separated tags for organization")
+    fitness_score: float | None = None
+    tags: str | None = Field(default=None, description="Comma-separated tags for organization")
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     @property
-    def tag_list(self) -> List[str]:
+    def tag_list(self) -> list[str]:
         if not self.tags:
             return []
         return [t.strip() for t in self.tags.split(",") if t.strip()]
@@ -57,8 +57,8 @@ class EvolutionRun(SQLModel, table=True):
     current_generation: int = Field(default=0)
     total_generations: int = Field(default=1)
     population_size: int = Field(default=5)
-    latest_directive: Optional[str] = Field(default="Focus on maximizing combinatorial novelty and logical consistency.")
-    config_snapshot: Optional[str] = None
+    latest_directive: str | None = Field(default="Focus on maximizing combinatorial novelty and logical consistency.")
+    config_snapshot: str | None = None
     concepts_generated: int = Field(default=0)
     concepts_retained: int = Field(default=0)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

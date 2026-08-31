@@ -1,5 +1,6 @@
+
 from pydantic import BaseModel, Field
-from typing import List, Optional
+
 
 class MutationOutput(BaseModel):
     title: str = Field(..., description="A punchy title for the new concept")
@@ -14,7 +15,7 @@ class CriticScore(BaseModel):
     semantic_jump: int = Field(..., ge=1, le=10, description="How far is this from the parent ideas? (1=Incremental, 10=Radical Shift)")
     prior_art_overlap: int = Field(default=1, ge=1, le=10, description="How much does this overlap with known existing work? (1=Completely Novel, 10=Already Exists)")
     implementation_path: str = Field(default="", description="Brief sketch of how this could be built or realized in the real world")
-    fatal_flaws: List[str] = Field(default_factory=list, description="List of immediate risks or logical gaps")
+    fatal_flaws: list[str] = Field(default_factory=list, description="List of immediate risks or logical gaps")
     rationale: str = Field(..., description="Brief explanation for the scores")
     evolutionary_directive: str = Field(..., description="A short instruction for the next generation on how to adapt")
 

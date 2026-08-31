@@ -1,7 +1,8 @@
-import pytest
 import os
 import tempfile
+
 from blindmind.config import Settings
+
 
 def test_config_defaults():
     settings = Settings(_env_file=None)

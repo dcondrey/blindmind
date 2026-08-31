@@ -1,11 +1,14 @@
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import patch, AsyncMock
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel
+
 from blindmind.engine import EvolutionEngine
-from blindmind.models import Concept, MutationType
-from blindmind.llm_schemas import MutationOutput, CriticScore
+from blindmind.llm_schemas import CriticScore, MutationOutput
+from blindmind.models import Concept
+
 
 @pytest.fixture(name="session")
 async def session_fixture():

@@ -1,9 +1,21 @@
 import pytest
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel, select
+
+from blindmind.db import (
+    delete_concept,
+    get_diverse_parents,
+    get_domain_distribution,
+    get_latent_space_sample,
+    get_random_concepts,
+    get_stats,
+    get_tournament_concepts,
+    save_concept,
+    search_concepts,
+)
 from blindmind.models import Concept, Lineage, MutationType
-from blindmind.db import save_concept, get_random_concepts, get_tournament_concepts, search_concepts, get_stats, delete_concept, get_diverse_parents, get_latent_space_sample, get_domain_distribution
+
 
 @pytest.fixture(name="session")
 async def session_fixture():

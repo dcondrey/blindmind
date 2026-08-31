@@ -2,8 +2,11 @@ import logging
 import os
 import warnings
 from logging.handlers import RotatingFileHandler
+
 from rich.logging import RichHandler
+
 from blindmind.config import settings
+
 
 def setup_logging():
     # Suppress noisy third-party loggers

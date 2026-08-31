@@ -1,8 +1,10 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import patch, AsyncMock
-from blindmind.llm import LLMEngine, LLMStats
-from blindmind.llm_schemas import MutationOutput, CriticScore
 from litellm import exceptions
+
+from blindmind.llm import LLMEngine, LLMStats
+from blindmind.llm_schemas import CriticScore, MutationOutput
 
 
 def _engine_with_providers(providers):

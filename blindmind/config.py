@@ -1,21 +1,22 @@
 import os
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
-from typing import Optional
 from pathlib import Path
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # LLM Settings
-    openai_api_key: Optional[str] = Field(default=None, alias="OPENAI_API_KEY")
-    anthropic_api_key: Optional[str] = Field(default=None, alias="ANTHROPIC_API_KEY")
-    gemini_api_key: Optional[str] = Field(default=None, alias="GEMINI_API_KEY")
-    openrouter_api_key: Optional[str] = Field(default=None, alias="OPENROUTER_API_KEY")
-    groq_api_key: Optional[str] = Field(default=None, alias="GROQ_API_KEY")
-    mistral_api_key: Optional[str] = Field(default=None, alias="MISTRAL_API_KEY")
-    perplexity_api_key: Optional[str] = Field(default=None, alias="PERPLEXITY_API_KEY")
-    cohere_api_key: Optional[str] = Field(default=None, alias="COHERE_API_KEY")
+    openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
+    anthropic_api_key: str | None = Field(default=None, alias="ANTHROPIC_API_KEY")
+    gemini_api_key: str | None = Field(default=None, alias="GEMINI_API_KEY")
+    openrouter_api_key: str | None = Field(default=None, alias="OPENROUTER_API_KEY")
+    groq_api_key: str | None = Field(default=None, alias="GROQ_API_KEY")
+    mistral_api_key: str | None = Field(default=None, alias="MISTRAL_API_KEY")
+    perplexity_api_key: str | None = Field(default=None, alias="PERPLEXITY_API_KEY")
+    cohere_api_key: str | None = Field(default=None, alias="COHERE_API_KEY")
 
     litellm_model: str = Field(default="gpt-4o-mini")
     variation_temperature: float = Field(default=1.0)
@@ -42,7 +43,7 @@ class Settings(BaseSettings):
         """Save current keys to local .env file, preserving unrelated vars."""
         existing = {}
         if os.path.exists(".env"):
-            with open(".env", "r") as f:
+            with open(".env") as f:
                 for line in f:
                     line = line.strip()
                     if line and not line.startswith("#") and "=" in line:
