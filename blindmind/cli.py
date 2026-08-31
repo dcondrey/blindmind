@@ -1,29 +1,33 @@
 import asyncio
 import json
 import os
+from datetime import UTC, datetime
+
 import typer
-from datetime import datetime, timezone, UTC
-from uuid import UUID
-from typing import Optional, List
-from rich.console import Console, Group
-from rich.table import Table
-from rich.panel import Panel
-from rich.columns import Columns
-from rich.text import Text
-from rich.live import Live
-from rich.layout import Layout
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
-from rich.prompt import Confirm, IntPrompt, Prompt
 from rich import print as rprint
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.prompt import Confirm, IntPrompt, Prompt
+from rich.table import Table
 from sqlalchemy.sql.expression import func
 from sqlmodel import select
 
-from blindmind.db import init_db, get_async_session, save_concept, create_run, search_concepts, get_stats, delete_concept, get_projects
-from blindmind.models import Concept, RunStatus, EvolutionRun, Lineage
-from blindmind.engine import EvolutionEngine
 from blindmind.config import settings
-from blindmind.logging import logger
+from blindmind.db import (
+    create_run,
+    delete_concept,
+    get_async_session,
+    get_projects,
+    get_stats,
+    init_db,
+    save_concept,
+    search_concepts,
+)
+from blindmind.engine import EvolutionEngine
 from blindmind.llm import llm_engine
+from blindmind.logging import logger
+from blindmind.models import Concept, EvolutionRun, Lineage, RunStatus
 
 app = typer.Typer(
     help="BlindMind: Elite Evolutionary Concept Refinement using LLMs.",
@@ -106,7 +110,7 @@ async def ensure_setup() -> str:
 
         if projects:
             # Projects exist: ask which to load
-            rprint(f"\n  [dim]Projects:[/dim]")
+            rprint("\n  [dim]Projects:[/dim]")
             for i, p in enumerate(projects, 1):
                 s = await get_stats(session, project=p)
                 rprint(f"    [bold]{i}[/bold]. {p} [dim]({s['total']} concepts, {s['domains']} domains, gen {s['generations']})[/dim]")
@@ -282,7 +286,6 @@ async def run_evolution_logic(generations: int, population: int, threshold: floa
             session.add(run_obj)
             await session.commit()
 
-            from blindmind.llm import llm_engine
             s = llm_engine.stats.summary
             summary_parts = [f"{s['total_calls']} LLM calls"]
             if s['failed']:
@@ -296,7 +299,7 @@ async def run_evolution_logic(generations: int, population: int, threshold: floa
 
             rprint(f"\n  [dim]{' | '.join(summary_parts)}[/dim]")
 
-async def list_concepts_logic(generation: Optional[int], limit: int, domain: str = None, min_fitness: float = None, project: str = None):
+async def list_concepts_logic(generation: int | None, limit: int, domain: str = None, min_fitness: float = None, project: str = None):
     async for session in get_async_session():
         if domain or min_fitness or project:
             results = await search_concepts(session, domain=domain, min_fitness=min_fitness, generation=generation, limit=limit, project=project)
@@ -385,7 +388,7 @@ async def stats_logic(project: str = None):
                 label = "seed" if gen == 0 else f"gen {gen}"
                 rprint(f"  {label:>6}  {bar} {count}")
 
-async def pick_concept_id(project: str, prompt_label: str = "Pick") -> Optional[str]:
+async def pick_concept_id(project: str, prompt_label: str = "Pick") -> str | None:
     """Show concept list and let user pick one by row number or short ID. Returns short ID or None."""
     async for session in get_async_session():
         results = (await session.execute(
@@ -522,7 +525,7 @@ async def import_json_logic(file: str, project: str = None):
         rprint(f"[red]File not found: {file}[/red]")
         return
 
-    with open(file, "r") as f:
+    with open(file) as f:
         data = json.load(f)
 
     concepts_data = data if isinstance(data, list) else data.get("concepts", data.get("seeds", []))
@@ -669,12 +672,12 @@ def main(ctx: typer.Context):
 
                     rprint(f"\n  [bold cyan]{_active_project}[/bold cyan] [dim]({concept_count} concepts)[/dim]")
                     rprint(f"  [dim]{'─' * 40}[/dim]")
-                    rprint(f"   [bold cyan]e[/bold cyan] Evolve    [bold green]s[/bold green] Seed")
-                    rprint(f"   [bold magenta]l[/bold magenta] List      [bold white]v[/bold white] View      [bold white]f[/bold white] Find")
-                    rprint(f"   [bold yellow]t[/bold yellow] Tree      [bold blue]g[/bold blue] Graph     [dim]a[/dim] Stats")
-                    rprint(f"   [bold blue]x[/bold blue] Export    [bold blue]i[/bold blue] Import    [dim]r[/dim] Runs")
-                    rprint(f"   [bold]p[/bold] Project   [dim]c[/dim] Config    [red]d[/red] Delete")
-                    rprint(f"   [dim]q Quit  ? Help[/dim]")
+                    rprint("   [bold cyan]e[/bold cyan] Evolve    [bold green]s[/bold green] Seed")
+                    rprint("   [bold magenta]l[/bold magenta] List      [bold white]v[/bold white] View      [bold white]f[/bold white] Find")
+                    rprint("   [bold yellow]t[/bold yellow] Tree      [bold blue]g[/bold blue] Graph     [dim]a[/dim] Stats")
+                    rprint("   [bold blue]x[/bold blue] Export    [bold blue]i[/bold blue] Import    [dim]r[/dim] Runs")
+                    rprint("   [bold]p[/bold] Project   [dim]c[/dim] Config    [red]d[/red] Delete")
+                    rprint("   [dim]q Quit  ? Help[/dim]")
 
                     choice = Prompt.ask("\n  [bold]>[/bold]", default="e")
                     choice_raw = choice.strip()
@@ -842,9 +845,9 @@ def init():
 def run(
     generations: int = 1,
     population: int = 5,
-    threshold: Optional[float] = typer.Option(None, "--threshold", "-t"),
-    temperature: Optional[float] = typer.Option(None, "--temperature", "-T"),
-    model: Optional[str] = typer.Option(None, "--model", "-m"),
+    threshold: float | None = typer.Option(None, "--threshold", "-t"),
+    temperature: float | None = typer.Option(None, "--temperature", "-T"),
+    model: str | None = typer.Option(None, "--model", "-m"),
     project: str = typer.Option("default", "--project", "-p"),
 ):
     """Start an evolutionary run."""
@@ -852,17 +855,17 @@ def run(
 
 @app.command("list")
 def list_cmd(
-    generation: Optional[int] = typer.Option(None, "--gen", "-g"),
+    generation: int | None = typer.Option(None, "--gen", "-g"),
     limit: int = typer.Option(20, "--limit", "-l"),
-    domain: Optional[str] = typer.Option(None, "--domain", "-d"),
-    min_fitness: Optional[float] = typer.Option(None, "--min-fitness"),
-    project: Optional[str] = typer.Option(None, "--project", "-p"),
+    domain: str | None = typer.Option(None, "--domain", "-d"),
+    min_fitness: float | None = typer.Option(None, "--min-fitness"),
+    project: str | None = typer.Option(None, "--project", "-p"),
 ):
     """List concepts."""
     asyncio.run(list_concepts_logic(generation, limit, domain=domain, min_fitness=min_fitness, project=project))
 
 @app.command()
-def search(query: str = typer.Argument(...), domain: Optional[str] = typer.Option(None, "-d"), min_fitness: Optional[float] = typer.Option(None, "--min-fitness"), limit: int = typer.Option(20, "-l"), project: Optional[str] = typer.Option(None, "-p")):
+def search(query: str = typer.Argument(...), domain: str | None = typer.Option(None, "-d"), min_fitness: float | None = typer.Option(None, "--min-fitness"), limit: int = typer.Option(20, "-l"), project: str | None = typer.Option(None, "-p")):
     """Search concepts."""
     asyncio.run(search_concepts_logic(query, domain=domain, min_fitness=min_fitness, limit=limit, project=project))
 
@@ -877,12 +880,12 @@ def delete(concept_id: str):
     asyncio.run(delete_concept_logic(concept_id))
 
 @app.command()
-def stats(project: Optional[str] = typer.Option(None, "-p")):
+def stats(project: str | None = typer.Option(None, "-p")):
     """Latent space statistics."""
     asyncio.run(stats_logic(project=project))
 
 @app.command()
-def graph(file: str = "evolution_graph.dot", project: Optional[str] = typer.Option(None, "-p")):
+def graph(file: str = "evolution_graph.dot", project: str | None = typer.Option(None, "-p")):
     """Export to Graphviz DOT."""
     asyncio.run(export_graph_logic(file, project=project))
 
@@ -892,12 +895,12 @@ def tree(concept_id: str):
     asyncio.run(tree_lineage_logic(concept_id))
 
 @app.command("export")
-def export_cmd(file: str = typer.Argument("blindmind_export.json"), project: Optional[str] = typer.Option(None, "-p")):
+def export_cmd(file: str = typer.Argument("blindmind_export.json"), project: str | None = typer.Option(None, "-p")):
     """Export to JSON."""
     asyncio.run(export_json_logic(file, project=project))
 
 @app.command("import")
-def import_cmd(file: str = typer.Argument(...), project: Optional[str] = typer.Option(None, "-p")):
+def import_cmd(file: str = typer.Argument(...), project: str | None = typer.Option(None, "-p")):
     """Import from JSON."""
     asyncio.run(import_json_logic(file, project=project))
 

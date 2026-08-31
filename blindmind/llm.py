@@ -3,10 +3,12 @@ import json
 import os
 import shutil
 import time
-from typing import List, Type, TypeVar, Optional, Any
-from pydantic import BaseModel, Field
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from typing import TypeVar
+
 from litellm import acompletion, exceptions
+from pydantic import BaseModel
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+
 from blindmind.config import settings
 from blindmind.logging import logger
 
@@ -49,7 +51,7 @@ class LLMStats:
 FATAL_ERROR_KEYWORDS = ("credit", "balance", "budget", "quota", "not found")
 
 
-def _resolve_key_for_override(model: str) -> Optional[str]:
+def _resolve_key_for_override(model: str) -> str | None:
     """Guess which configured API key an explicit --model override needs, by provider prefix."""
     if model == "claude-cli":
         return None
@@ -75,7 +77,7 @@ class LLMEngine:
         self._initialized = False
         self.stats = LLMStats()
 
-    def set_model_override(self, model: Optional[str]):
+    def set_model_override(self, model: str | None):
         """Force a specific model (e.g. from --model) to the front of the provider pool.
         Rebuilds the pool on the next call so the override actually takes effect."""
         self._explicit_override = model
@@ -87,7 +89,7 @@ class LLMEngine:
         self.providers = await self._get_available_providers()
         self._initialized = True
 
-    async def _get_available_providers(self) -> List[dict]:
+    async def _get_available_providers(self) -> list[dict]:
         pool = []
 
         if self._explicit_override:
@@ -130,7 +132,7 @@ class LLMEngine:
 
         return pool
 
-    async def _completion(self, messages: List[dict], temperature: float, response_format: Type[T]) -> T:
+    async def _completion(self, messages: list[dict], temperature: float, response_format: type[T]) -> T:
         await self._lazy_init()
         if not self.providers:
             raise RuntimeError("No API keys found for any supported provider.")
@@ -172,7 +174,7 @@ class LLMEngine:
         wait=wait_exponential(multiplier=2, min=4, max=20),
         retry=retry_if_exception_type((exceptions.ServiceUnavailableError, exceptions.APIError)),
     )
-    async def _try_provider(self, provider: dict, messages: List[dict], temperature: float, response_format: Type[T]) -> T:
+    async def _try_provider(self, provider: dict, messages: list[dict], temperature: float, response_format: type[T]) -> T:
         if provider["model"] == "claude-cli":
             return await self._try_claude_cli(messages, response_format)
         async with self.semaphore:
@@ -198,7 +200,7 @@ class LLMEngine:
 
             return response_format.model_validate_json(content)
 
-    async def _try_claude_cli(self, messages: List[dict], response_format: Type[T]) -> T:
+    async def _try_claude_cli(self, messages: list[dict], response_format: type[T]) -> T:
         """Structured generation via the local Claude Code CLI, authenticated by
         subscription (not per-token API billing). Strips ANTHROPIC_API_KEY from the
         subprocess env so the CLI falls back to its keychain/OAuth subscription auth
@@ -219,8 +221,13 @@ class LLMEngine:
                 env=env,
             )
             try:
-                stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=120)
-            except asyncio.TimeoutError:
+                # 240s, not 120s: a long directive (register digest, forbidden-domain
+                # lists) pushes extended-thinking haiku calls past 120s on a large
+                # fraction of calls even with no concurrency, observed on the rule30
+                # project (0/1 succeeded at 120s serially; a bare call with the same
+                # prompt took 73s but varied well past that under real load).
+                stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=240)
+            except TimeoutError:
                 proc.kill()
                 await proc.wait()
                 raise

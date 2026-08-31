@@ -1,18 +1,23 @@
 import asyncio
 import random
-from collections import Counter
-from typing import List, Tuple, Optional
+from collections.abc import Awaitable, Callable
 from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
-from blindmind.llm import llm_engine
-from blindmind.prompts import CROSSOVER_PROMPT, POINT_MUTATION_PROMPT, INVERSION_PROMPT, CRITIC_PROMPT, WILDCARD_PROMPT
-from blindmind.models import Concept, Lineage, MutationType, EvolutionRun, RunStatus
-from blindmind.db import save_concept, get_random_concepts, get_tournament_concepts, get_diverse_parents, get_latent_space_sample, get_domain_distribution
-from blindmind.llm_schemas import MutationOutput, CriticScore
-from blindmind.config import settings
-from blindmind.logging import logger
 
+from blindmind.config import settings
+from blindmind.db import (
+    get_diverse_parents,
+    get_domain_distribution,
+    get_latent_space_sample,
+    get_tournament_concepts,
+)
+from blindmind.llm import llm_engine
+from blindmind.llm_schemas import CriticScore, MutationOutput
+from blindmind.logging import logger
+from blindmind.models import Concept, MutationType
+from blindmind.prompts import CRITIC_PROMPT, CROSSOVER_PROMPT, INVERSION_PROMPT, POINT_MUTATION_PROMPT, WILDCARD_PROMPT
 
 ALL_DOMAINS = [
     "Biology", "Physics", "Chemistry", "Mathematics", "Computer Science",
@@ -23,17 +28,25 @@ ALL_DOMAINS = [
 
 
 class EvolutionEngine:
-    def __init__(self, session: AsyncSession, directive: Optional[str] = None, project: str = "default"):
+    def __init__(self, session: AsyncSession, directive: str | None = None, project: str = "default"):
         self.session = session
         self.directive = directive
         self.project = project
         self.crossover_rate = settings.crossover_rate
         self.point_mutation_rate = settings.point_mutation_rate
-        self.rejected_titles: List[str] = []
+        self.rejected_titles: list[str] = []
         self.adaptive_threshold = settings.critic_threshold
         self._latent_context = None
         self._existing_titles = None
         self._domain_dist = None
+        # AsyncSession is not safe for concurrent use: run_generation_cycle fans
+        # _create_candidate out via asyncio.gather, and several of those coroutines
+        # call this shared session (get_diverse_parents/get_tournament_concepts)
+        # concurrently. That's undefined behavior with SQLAlchemy's async session
+        # (can corrupt session state or, with aiosqlite's thread-bridge, stall an
+        # awaited future indefinitely). Serialize only the DB calls; LLM calls stay
+        # concurrent (they're independently gated by llm_engine's own semaphore).
+        self._session_lock = asyncio.Lock()
 
     async def _load_context(self):
         if self._latent_context is None:
@@ -43,7 +56,7 @@ class EvolutionEngine:
             self._existing_titles = [f"[{c.domain}] {c.title}" for c in all_concepts]
             self._domain_dist = await get_domain_distribution(self.session, project=self.project)
 
-    def _get_underrepresented_domains(self) -> List[str]:
+    def _get_underrepresented_domains(self) -> list[str]:
         if not self._domain_dist:
             return ALL_DOMAINS[:5]
         existing = set(self._domain_dist.keys())
@@ -53,7 +66,12 @@ class EvolutionEngine:
         avg = sum(self._domain_dist.values()) / len(self._domain_dist)
         return [d for d, c in self._domain_dist.items() if c < avg][:5]
 
-    async def run_generation_cycle(self, generation: int, population_size: int) -> List[Tuple[MutationOutput, CriticScore, List[UUID], MutationType]]:
+    async def run_generation_cycle(
+        self,
+        generation: int,
+        population_size: int,
+        on_survivor: Callable[[tuple[MutationOutput, CriticScore, list[UUID], MutationType]], Awaitable[None]] | None = None,
+    ) -> list[tuple[MutationOutput, CriticScore, list[UUID], MutationType]]:
         logger.info(f"Starting generation {generation} cycle. Target population: {population_size}")
         if self.directive:
             logger.info(f"Active Directive: {self.directive}")
@@ -80,6 +98,13 @@ class EvolutionEngine:
                         survivors.append(res)
                         batch_successes += 1
                         logger.info(f"Survivor: '{mutation.title}' (score={critique.composite_score:.2f}, type={m_type})")
+                        if on_survivor is not None:
+                            # Persist immediately: an outer per-generation timeout
+                            # cancels this coroutine mid-loop, and a survivor only
+                            # held in the local `survivors` list would be lost with
+                            # it. Saving here makes already-found work durable
+                            # regardless of whether this generation finishes.
+                            await on_survivor(res)
                         if len(survivors) >= population_size:
                             break
                     else:
@@ -107,7 +132,7 @@ class EvolutionEngine:
 
         return survivors
 
-    async def _create_candidate(self, generation: int) -> Optional[Tuple[MutationOutput, CriticScore, List[UUID], MutationType]]:
+    async def _create_candidate(self, generation: int) -> tuple[MutationOutput, CriticScore, list[UUID], MutationType] | None:
         try:
             choice = random.random()
 
@@ -116,7 +141,8 @@ class EvolutionEngine:
                 return await self._create_wildcard()
             elif choice < 0.1 + self.crossover_rate:
                 # Use diversity-aware parent selection for crossover
-                parents = await get_diverse_parents(self.session, count=2, project=self.project)
+                async with self._session_lock:
+                    parents = await get_diverse_parents(self.session, count=2, project=self.project)
                 if len(parents) < 2:
                     return await self._create_point_mutation()
                 parent_ids = [p.id for p in parents]
@@ -129,7 +155,8 @@ class EvolutionEngine:
             elif choice < 0.1 + self.crossover_rate + self.point_mutation_rate:
                 return await self._create_point_mutation()
             else:
-                parents = await get_tournament_concepts(self.session, count=1, project=self.project)
+                async with self._session_lock:
+                    parents = await get_tournament_concepts(self.session, count=1, project=self.project)
                 if not parents:
                     return None
                 parent_ids = [p.id for p in parents]
@@ -158,8 +185,9 @@ class EvolutionEngine:
             logger.error(f"Error creating candidate: {e}")
             return None
 
-    async def _create_point_mutation(self) -> Optional[Tuple[MutationOutput, CriticScore, List[UUID], MutationType]]:
-        parents = await get_tournament_concepts(self.session, count=1, project=self.project)
+    async def _create_point_mutation(self) -> tuple[MutationOutput, CriticScore, list[UUID], MutationType] | None:
+        async with self._session_lock:
+            parents = await get_tournament_concepts(self.session, count=1, project=self.project)
         if not parents:
             return None
         parent_ids = [parents[0].id]
@@ -179,7 +207,7 @@ class EvolutionEngine:
         )
         return mutation, critique, parent_ids, MutationType.POINT_MUTATION
 
-    async def _create_wildcard(self) -> Optional[Tuple[MutationOutput, CriticScore, List[UUID], MutationType]]:
+    async def _create_wildcard(self) -> tuple[MutationOutput, CriticScore, list[UUID], MutationType] | None:
         prompt = WILDCARD_PROMPT.render(
             directive=self.directive,
             latent_space_context=self._latent_context,
@@ -210,7 +238,7 @@ class EvolutionEngine:
         return False
 
     @staticmethod
-    def synthesize_directives(directives: List[Tuple[str, float]]) -> str:
+    def synthesize_directives(directives: list[tuple[str, float]]) -> str:
         """Weight directives by their critique scores, pick the top ones."""
         if not directives:
             return "Focus on maximizing combinatorial novelty and logical consistency."
