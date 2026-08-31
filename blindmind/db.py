@@ -224,8 +224,8 @@ async def delete_concept(session: AsyncSession, concept_id) -> bool:
     lineages = (await session.execute(
         select(Lineage).where((Lineage.child_id == concept_id) | (Lineage.parent_id == concept_id))
     )).scalars().all()
-    for l in lineages:
-        await session.delete(l)
+    for link in lineages:
+        await session.delete(link)
 
     await session.delete(concept)
     await session.commit()

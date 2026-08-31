@@ -1,18 +1,18 @@
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 from sqlmodel import Field, SQLModel
 
 
-class MutationType(str, Enum):
+class MutationType(StrEnum):
     CROSSOVER = "CROSSOVER"
     POINT_MUTATION = "POINT_MUTATION"
     INVERSION = "INVERSION"
     WILDCARD = "WILDCARD"
 
 
-class RunStatus(str, Enum):
+class RunStatus(StrEnum):
     IN_PROGRESS = "IN_PROGRESS"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"

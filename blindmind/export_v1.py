@@ -163,8 +163,8 @@ async def export_v1_logic(file: str, project: str):
 
         concept_ids = {c.id for c in concepts}
         lineages = [
-            l for l in (await session.execute(select(Lineage))).scalars().all()
-            if l.child_id in concept_ids or l.parent_id in concept_ids
+            link for link in (await session.execute(select(Lineage))).scalars().all()
+            if link.child_id in concept_ids or link.parent_id in concept_ids
         ]
 
         from blindmind.models import EvolutionRun

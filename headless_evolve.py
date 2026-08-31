@@ -18,10 +18,10 @@ settings.crossover_rate = 0.7             # bias toward smashing disparate seeds
 settings.point_mutation_rate = 0.2
 settings.max_concurrent_calls = 4
 
-from blindmind.db import get_async_session, save_concept
-from blindmind.engine import EvolutionEngine
-from blindmind.llm import llm_engine
-from blindmind.models import Concept
+from blindmind.db import get_async_session, save_concept  # noqa: E402 (settings must be set before these imports)
+from blindmind.engine import EvolutionEngine  # noqa: E402 (settings must be set before these imports)
+from blindmind.llm import llm_engine  # noqa: E402 (settings must be set before these imports)
+from blindmind.models import Concept  # noqa: E402 (settings must be set before these imports)
 
 llm_engine.providers = [{"model": "openrouter/openai/gpt-4o",
                          "api_key": os.environ["OPENROUTER_API_KEY"], "label": "OR-gpt4o"}]

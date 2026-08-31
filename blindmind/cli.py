@@ -103,10 +103,14 @@ async def ensure_setup() -> str:
     global _active_project
 
     found_keys = []
-    if settings.openai_api_key: found_keys.append("OpenAI")
-    if settings.anthropic_api_key: found_keys.append("Anthropic")
-    if settings.gemini_api_key: found_keys.append("Gemini")
-    if settings.openrouter_api_key: found_keys.append("OpenRouter")
+    if settings.openai_api_key:
+        found_keys.append("OpenAI")
+    if settings.anthropic_api_key:
+        found_keys.append("Anthropic")
+    if settings.gemini_api_key:
+        found_keys.append("Gemini")
+    if settings.openrouter_api_key:
+        found_keys.append("OpenRouter")
 
     if not found_keys:
         rprint("\n[bold yellow]No API keys found.[/bold yellow]")
@@ -115,7 +119,8 @@ async def ensure_setup() -> str:
             settings.openai_api_key = key
         else:
             anthropic_key = Prompt.ask("Enter [cyan]ANTHROPIC_API_KEY[/cyan]", password=True)
-            if anthropic_key: settings.anthropic_api_key = anthropic_key
+            if anthropic_key:
+                settings.anthropic_api_key = anthropic_key
 
         if settings.openai_api_key or settings.anthropic_api_key:
             settings.save_local_env()
@@ -494,20 +499,20 @@ async def view_concept_logic(concept_id: str, project: str | None = None):
 
         if parent_links:
             parent_lines = []
-            for l in parent_links:
-                p = next((c for c in all_concepts if c.id == l.parent_id), None)
+            for link in parent_links:
+                p = next((c for c in all_concepts if c.id == link.parent_id), None)
                 if p:
-                    icon = MUTATION_ICONS.get(l.mutation_type, "?")
+                    icon = MUTATION_ICONS.get(link.mutation_type, "?")
                     parent_lines.append(f"  [{icon}] [cyan]{p.title}[/cyan] [dim]({p.domain}, Gen {p.generation})[/dim]")
             if parent_lines:
                 lineage_text += "\n[dim]Parents:[/dim]\n" + "\n".join(parent_lines)
 
         if child_links:
             child_lines = []
-            for l in child_links:
-                ch = next((c for c in all_concepts if c.id == l.child_id), None)
+            for link in child_links:
+                ch = next((c for c in all_concepts if c.id == link.child_id), None)
                 if ch:
-                    icon = MUTATION_ICONS.get(l.mutation_type, "?")
+                    icon = MUTATION_ICONS.get(link.mutation_type, "?")
                     fit_ch = f" {ch.fitness_score:.1f}" if ch.fitness_score else ""
                     child_lines.append(f"  [{icon}] [green]{ch.title}[/green] [dim]({ch.domain}, Gen {ch.generation}{fit_ch})[/dim]")
             if child_lines:
@@ -544,7 +549,7 @@ async def export_json_logic(file: str, project: str = None):
         concepts = (await session.execute(stmt)).scalars().all()
         lineages = (await session.execute(select(Lineage))).scalars().all()
         concept_ids = {c.id for c in concepts}
-        relevant_lineages = [l for l in lineages if l.child_id in concept_ids]
+        relevant_lineages = [link for link in lineages if link.child_id in concept_ids]
 
         data = {
             "version": "1.0",
@@ -558,8 +563,8 @@ async def export_json_logic(file: str, project: str = None):
                 for c in concepts
             ],
             "lineages": [
-                {"child_id": str(l.child_id), "parent_id": str(l.parent_id), "mutation_type": l.mutation_type}
-                for l in relevant_lineages
+                {"child_id": str(link.child_id), "parent_id": str(link.parent_id), "mutation_type": link.mutation_type}
+                for link in relevant_lineages
             ],
         }
         with open(file, "w") as f:
@@ -615,10 +620,10 @@ async def display_graph_logic(project: str = None):
         # Build parent->children map
         children_map: dict = {}
         has_parent = set()
-        for l in lineages:
-            if l.child_id in concept_ids and l.parent_id in concept_ids:
-                children_map.setdefault(l.parent_id, []).append((l.child_id, l.mutation_type))
-                has_parent.add(l.child_id)
+        for link in lineages:
+            if link.child_id in concept_ids and link.parent_id in concept_ids:
+                children_map.setdefault(link.parent_id, []).append((link.child_id, link.mutation_type))
+                has_parent.add(link.child_id)
 
         roots = [c for c in concepts if c.id not in has_parent]
 
@@ -644,7 +649,7 @@ async def display_graph_logic(project: str = None):
             add_children(node, root.id)
 
         console.print(root_tree)
-        rprint(f"  [dim]{len(concepts)} concepts, {len([l for l in lineages if l.child_id in concept_ids])} links[/dim]")
+        rprint(f"  [dim]{len(concepts)} concepts, {len([link for link in lineages if link.child_id in concept_ids])} links[/dim]")
 
 
 async def export_graph_logic(file: str, project: str = None):
@@ -655,7 +660,7 @@ async def export_graph_logic(file: str, project: str = None):
         concepts = (await session.execute(stmt)).scalars().all()
         concept_ids = {c.id for c in concepts}
         lineages = (await session.execute(select(Lineage))).scalars().all()
-        relevant_lineages = [l for l in lineages if l.child_id in concept_ids]
+        relevant_lineages = [link for link in lineages if link.child_id in concept_ids]
 
         def dot_escape(s: str) -> str:
             return str(s).replace("\\", "\\\\").replace('"', '\\"')
@@ -665,8 +670,8 @@ async def export_graph_logic(file: str, project: str = None):
             label = f"{dot_escape(c.title)}\\n(Gen {c.generation})\\nScore: {c.fitness_score or 'N/A'}"
             color = "#e1f5fe" if c.generation == 0 else "#c8e6c9"
             dot_content.append(f'  "{c.id}" [label="{label}", fillcolor="{color}"];')
-        for l in relevant_lineages:
-            dot_content.append(f'  "{l.parent_id}" -> "{l.child_id}" [label="{l.mutation_type}"];')
+        for link in relevant_lineages:
+            dot_content.append(f'  "{link.parent_id}" -> "{link.child_id}" [label="{link.mutation_type}"];')
         dot_content.append("}")
         with open(file, "w") as f:
             f.write("\n".join(dot_content))

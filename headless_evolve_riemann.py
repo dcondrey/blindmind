@@ -22,10 +22,10 @@ settings.crossover_rate = 0.6
 settings.point_mutation_rate = 0.3
 settings.max_concurrent_calls = 3
 
-from blindmind.db import get_async_session
-from blindmind.engine import EvolutionEngine
-from blindmind.llm import CLAUDE_CLI_LABEL, llm_engine
-from headless_common import persist_survivor
+from blindmind.db import get_async_session  # noqa: E402 (settings must be set before these imports)
+from blindmind.engine import EvolutionEngine  # noqa: E402 (settings must be set before these imports)
+from blindmind.llm import CLAUDE_CLI_LABEL, llm_engine  # noqa: E402 (settings must be set before these imports)
+from headless_common import persist_survivor  # noqa: E402 (settings must be set before these imports)
 
 llm_engine.providers = [{"model": "claude-cli", "api_key": None, "label": CLAUDE_CLI_LABEL}]
 llm_engine._initialized = True
@@ -64,7 +64,7 @@ async def main():
             engine = EvolutionEngine(session, directive=directive, project=PROJECT)
             weighted = []
 
-            async def on_survivor(res, gen=gen, weighted=weighted):
+            async def on_survivor(res, gen=gen, weighted=weighted, session=session):
                 weighted.append(await persist_survivor(session, PROJECT, gen, res, log, score_fmt=".1f"))
 
             survivors = await engine.run_generation_cycle(gen, POPULATION, on_survivor=on_survivor)

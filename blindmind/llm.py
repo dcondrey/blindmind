@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 import time
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from litellm import acompletion, exceptions
 from pydantic import BaseModel
@@ -11,6 +11,9 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_ex
 
 from blindmind.config import settings
 from blindmind.logging import logger
+
+if TYPE_CHECKING:
+    from blindmind.llm_schemas import CriticScore, MutationOutput
 
 CLAUDE_CLI_LABEL = "Claude (subscription)"
 
@@ -96,7 +99,8 @@ class LLMEngine:
         self._blacklisted = set()
 
     async def _lazy_init(self):
-        if self._initialized: return
+        if self._initialized:
+            return
         self.providers = await self._get_available_providers()
         self._initialized = True
 

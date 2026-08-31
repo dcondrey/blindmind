@@ -33,10 +33,10 @@ settings.point_mutation_rate = 0.3
 # statement of intent for this script.
 settings.max_concurrent_calls = 1
 
-from blindmind.db import get_async_session, save_concept
-from blindmind.engine import EvolutionEngine
-from blindmind.llm import CLAUDE_CLI_LABEL, llm_engine
-from blindmind.models import Concept
+from blindmind.db import get_async_session, save_concept  # noqa: E402 (settings must be set before these imports)
+from blindmind.engine import EvolutionEngine  # noqa: E402 (settings must be set before these imports)
+from blindmind.llm import CLAUDE_CLI_LABEL, llm_engine  # noqa: E402 (settings must be set before these imports)
+from blindmind.models import Concept  # noqa: E402 (settings must be set before these imports)
 
 llm_engine.providers = [{"model": "claude-cli", "api_key": None, "label": CLAUDE_CLI_LABEL}]
 llm_engine._initialized = True
@@ -143,7 +143,7 @@ async def main():
 
             saved = []  # (directive, score) pairs, filled in as survivors are found
 
-            async def on_survivor(res, saved=saved):
+            async def on_survivor(res, saved=saved, gen=gen, session=session):
                 mutation, critique, parent_ids, m_type = res
                 mt = getattr(m_type, "value", str(m_type))
                 tags = f"gen{gen},{mt},priorart{critique.prior_art_overlap},nov{critique.conceptual_novelty}"
