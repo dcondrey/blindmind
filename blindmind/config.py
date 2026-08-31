@@ -83,7 +83,16 @@ class Settings(BaseSettings):
 def discover_api_keys():
     """Aggressively search for API keys in environment and dotfiles."""
     s = Settings()
-    if any([s.openai_api_key, s.anthropic_api_key, s.gemini_api_key, s.openrouter_api_key, s.groq_api_key, s.mistral_api_key]):
+    if any(
+        [
+            s.openai_api_key,
+            s.anthropic_api_key,
+            s.gemini_api_key,
+            s.openrouter_api_key,
+            s.groq_api_key,
+            s.mistral_api_key,
+        ]
+    ):
         return s
 
     home = Path.home()

@@ -65,7 +65,9 @@ async def main():
         engine = EvolutionEngine(session, directive=DIRECTIVE0, project=PROJECT)
 
         async def on_survivor(res, session=session):
-            await persist_survivor(session, PROJECT, 1, res, log, score_fmt=".2f", show_prior_art=False, show_flaws=True)
+            await persist_survivor(
+                session, PROJECT, 1, res, log, score_fmt=".2f", show_prior_art=False, show_flaws=True
+            )
 
         survivors = await engine.run_generation_cycle(1, POPULATION, on_survivor=on_survivor)
         log.info(f"Gen 1: {len(survivors)} retained")

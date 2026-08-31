@@ -35,7 +35,10 @@ def _mock_response(content: str, in_tok=100, out_tok=50):
 @pytest.mark.asyncio
 async def test_generate_mutation_success():
     engine = _engine_with_providers(TWO_PROVIDERS)
-    mock_response = _mock_response('{"title": "Quantum Logistics", "domain": "Logistics", "description": "Using entanglement for instant tracking", "justification": "Novel combo"}')
+    mock_response = _mock_response(
+        '{"title": "Quantum Logistics", "domain": "Logistics", '
+        '"description": "Using entanglement for instant tracking", "justification": "Novel combo"}'
+    )
 
     with patch("blindmind.llm.acompletion", return_value=mock_response) as mock_acompletion:
         result = await engine.generate_mutation("Test prompt")
@@ -60,7 +63,12 @@ async def test_generate_mutation_with_retries():
 @pytest.mark.asyncio
 async def test_critique_mutation():
     engine = _engine_with_providers(TWO_PROVIDERS)
-    mock_response = _mock_response('{"conceptual_novelty": 9, "feasibility": 5, "utility": 8, "semantic_jump": 7, "rationale": "High novelty but hard to implement", "evolutionary_directive": "Focus on stability"}', in_tok=80, out_tok=40)
+    mock_response = _mock_response(
+        '{"conceptual_novelty": 9, "feasibility": 5, "utility": 8, "semantic_jump": 7, '
+        '"rationale": "High novelty but hard to implement", "evolutionary_directive": "Focus on stability"}',
+        in_tok=80,
+        out_tok=40,
+    )
 
     with patch("blindmind.llm.acompletion", return_value=mock_response):
         result = await engine.critique_mutation("Test prompt")
@@ -89,7 +97,9 @@ async def test_transient_failure_falls_back_without_blacklisting():
     downgraded for the rest of the session (this was the rotation-never-resets bug:
     one transient error used to permanently exile a good provider)."""
     engine = _engine_with_providers(TWO_PROVIDERS)
-    good_response = _mock_response('{"title": "T", "domain": "D", "description": "Desc", "justification": "J"}', in_tok=10, out_tok=10)
+    good_response = _mock_response(
+        '{"title": "T", "domain": "D", "description": "Desc", "justification": "J"}', in_tok=10, out_tok=10
+    )
 
     with patch("blindmind.llm.acompletion", side_effect=[
         exceptions.RateLimitError("limited", model="m", llm_provider="p"),
@@ -107,7 +117,9 @@ async def test_transient_failure_falls_back_without_blacklisting():
 @pytest.mark.asyncio
 async def test_auth_failure_blacklists_provider_for_session():
     engine = _engine_with_providers(TWO_PROVIDERS)
-    good_response = _mock_response('{"title": "T", "domain": "D", "description": "Desc", "justification": "J"}', in_tok=10, out_tok=10)
+    good_response = _mock_response(
+        '{"title": "T", "domain": "D", "description": "Desc", "justification": "J"}', in_tok=10, out_tok=10
+    )
 
     with patch("blindmind.llm.acompletion", side_effect=[
         exceptions.AuthenticationError("bad key", model="m", llm_provider="p"),

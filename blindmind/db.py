@@ -85,14 +85,35 @@ async def get_tournament_concepts(session: AsyncSession, count: int, tournament_
 
     return selected
 
-async def create_run(session: AsyncSession, config_json: str = None, total_generations: int = 1, population_size: int = 5, project: str = "default") -> EvolutionRun:
-    run = EvolutionRun(config_snapshot=config_json, total_generations=total_generations, population_size=population_size, project=project)
+async def create_run(
+    session: AsyncSession,
+    config_json: str = None,
+    total_generations: int = 1,
+    population_size: int = 5,
+    project: str = "default",
+) -> EvolutionRun:
+    run = EvolutionRun(
+        config_snapshot=config_json,
+        total_generations=total_generations,
+        population_size=population_size,
+        project=project,
+    )
     session.add(run)
     await session.commit()
     await session.refresh(run)
     return run
 
-async def search_concepts(session: AsyncSession, query: str = None, domain: str = None, min_fitness: float = None, max_fitness: float = None, generation: int = None, tags: str = None, limit: int = 20, project: str = None):
+async def search_concepts(
+    session: AsyncSession,
+    query: str = None,
+    domain: str = None,
+    min_fitness: float = None,
+    max_fitness: float = None,
+    generation: int = None,
+    tags: str = None,
+    limit: int = 20,
+    project: str = None,
+):
     statement = select(Concept)
 
     if project:
@@ -124,7 +145,16 @@ async def get_stats(session: AsyncSession, project: str = None) -> dict:
         base = base.where(Concept.project == project)
     total = (await session.execute(base)).scalar() or 0
     if total == 0:
-        return {"total": 0, "generations": 0, "avg_fitness": 0, "max_fitness": 0, "min_fitness": 0, "domains": 0, "seeds": 0, "evolved": 0}
+        return {
+            "total": 0,
+            "generations": 0,
+            "avg_fitness": 0,
+            "max_fitness": 0,
+            "min_fitness": 0,
+            "domains": 0,
+            "seeds": 0,
+            "evolved": 0,
+        }
 
     def _where(stmt):
         if project:
@@ -132,9 +162,17 @@ async def get_stats(session: AsyncSession, project: str = None) -> dict:
         return stmt
 
     max_gen = (await session.execute(_where(select(func.max(Concept.generation))))).scalar() or 0
-    avg_fitness = (await session.execute(_where(select(func.avg(Concept.fitness_score)).where(Concept.fitness_score.isnot(None))))).scalar() or 0
+    avg_fitness = (
+        await session.execute(
+            _where(select(func.avg(Concept.fitness_score)).where(Concept.fitness_score.isnot(None)))
+        )
+    ).scalar() or 0
     max_fitness = (await session.execute(_where(select(func.max(Concept.fitness_score))))).scalar() or 0
-    min_fitness = (await session.execute(_where(select(func.min(Concept.fitness_score)).where(Concept.fitness_score.isnot(None))))).scalar() or 0
+    min_fitness = (
+        await session.execute(
+            _where(select(func.min(Concept.fitness_score)).where(Concept.fitness_score.isnot(None)))
+        )
+    ).scalar() or 0
     domains = (await session.execute(_where(select(func.count(func.distinct(Concept.domain)))))).scalar() or 0
     seeds = (await session.execute(_where(select(func.count(Concept.id)).where(Concept.generation == 0)))).scalar() or 0
     evolved = total - seeds
@@ -161,7 +199,9 @@ async def get_domain_distribution(session: AsyncSession, project: str = None) ->
         dist[c.domain] = dist.get(c.domain, 0) + 1
     return dist
 
-async def get_diverse_parents(session: AsyncSession, count: int = 2, tournament_size: int = 5, project: str = None) -> list:
+async def get_diverse_parents(
+    session: AsyncSession, count: int = 2, tournament_size: int = 5, project: str = None
+) -> list:
     selected = []
     used_domains = set()
 

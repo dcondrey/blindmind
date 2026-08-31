@@ -78,7 +78,9 @@ async def main():
             weighted = []
 
             async def on_survivor(res, gen=gen, weighted=weighted, session=session):
-                weighted.append(await persist_survivor(session, PROJECT, gen, res, log, score_fmt=".2f", show_flaws=True))
+                weighted.append(
+                    await persist_survivor(session, PROJECT, gen, res, log, score_fmt=".2f", show_flaws=True)
+                )
 
             survivors = await engine.run_generation_cycle(gen, POPULATION, on_survivor=on_survivor)
             if weighted:

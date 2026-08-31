@@ -30,7 +30,14 @@ async def test_run_generation_cycle(session: AsyncSession):
     engine = EvolutionEngine(session)
 
     mock_mutation = MutationOutput(title="New", domain="D", description="Desc", justification="J")
-    mock_critique = CriticScore(conceptual_novelty=9, feasibility=9, utility=9, semantic_jump=8, rationale="Good", evolutionary_directive="Focus on tech")
+    mock_critique = CriticScore(
+        conceptual_novelty=9,
+        feasibility=9,
+        utility=9,
+        semantic_jump=8,
+        rationale="Good",
+        evolutionary_directive="Focus on tech",
+    )
 
     with patch("blindmind.engine.llm_engine.generate_mutation", return_value=mock_mutation), \
          patch("blindmind.engine.llm_engine.critique_mutation", return_value=mock_critique):
@@ -51,8 +58,22 @@ async def test_run_generation_cycle_with_rejections(session: AsyncSession):
     engine = EvolutionEngine(session)
 
     mock_mutation = MutationOutput(title="New", domain="D", description="Desc", justification="J")
-    mock_critique_fail = CriticScore(conceptual_novelty=2, feasibility=2, utility=2, semantic_jump=1, rationale="Bad", evolutionary_directive="Try again")
-    mock_critique_pass = CriticScore(conceptual_novelty=9, feasibility=9, utility=9, semantic_jump=9, rationale="Good", evolutionary_directive="Double down")
+    mock_critique_fail = CriticScore(
+        conceptual_novelty=2,
+        feasibility=2,
+        utility=2,
+        semantic_jump=1,
+        rationale="Bad",
+        evolutionary_directive="Try again",
+    )
+    mock_critique_pass = CriticScore(
+        conceptual_novelty=9,
+        feasibility=9,
+        utility=9,
+        semantic_jump=9,
+        rationale="Good",
+        evolutionary_directive="Double down",
+    )
 
     with patch("blindmind.engine.llm_engine.generate_mutation", return_value=mock_mutation), \
          patch("blindmind.engine.llm_engine.critique_mutation", side_effect=[mock_critique_fail, mock_critique_pass]):
@@ -96,7 +117,9 @@ def test_prefilter_rejects_degenerate_candidate():
     empty_desc = MutationOutput(title="Real Title", domain="D", description="   ", justification="J")
     assert engine._prefilter_reject(empty_desc) is not None
 
-    placeholder_title = MutationOutput(title="Untitled", domain="D", description="A real description here.", justification="J")
+    placeholder_title = MutationOutput(
+        title="Untitled", domain="D", description="A real description here.", justification="J"
+    )
     assert engine._prefilter_reject(placeholder_title) is not None
 
     fine = MutationOutput(title="Mycelial Computing", domain="D", description="A real description.", justification="J")
@@ -110,10 +133,14 @@ def test_prefilter_rejects_near_duplicate_of_existing_title():
     engine.rejected_titles = []
     engine._existing_titles = ["[Biology] Mycelial Computing Networks"]
 
-    near_dup = MutationOutput(title="Mycelial Computing Network", domain="Biology", description="A real description.", justification="J")
+    near_dup = MutationOutput(
+        title="Mycelial Computing Network", domain="Biology", description="A real description.", justification="J"
+    )
     assert engine._prefilter_reject(near_dup) is not None
 
-    distinct = MutationOutput(title="Quantum Ledger Ecosystems", domain="Biology", description="A real description.", justification="J")
+    distinct = MutationOutput(
+        title="Quantum Ledger Ecosystems", domain="Biology", description="A real description.", justification="J"
+    )
     assert engine._prefilter_reject(distinct) is None
 
 
@@ -127,7 +154,9 @@ async def test_prefilter_skips_critique_llm_call(session: AsyncSession):
 
     engine = EvolutionEngine(session)
     await engine._load_context()  # populates self._existing_titles from the DB, as run_generation_cycle would
-    duplicate_mutation = MutationOutput(title="T1", domain="D1", description="Same as an existing concept.", justification="J")
+    duplicate_mutation = MutationOutput(
+        title="T1", domain="D1", description="Same as an existing concept.", justification="J"
+    )
 
     with patch("blindmind.engine.llm_engine.generate_mutation", return_value=duplicate_mutation) as mock_gen, \
          patch("blindmind.engine.llm_engine.critique_mutation") as mock_critique:
@@ -213,8 +242,24 @@ async def test_flagged_candidate_still_survives_a_permissive_threshold(session: 
 
 def test_composite_score_with_prior_art():
     # Novel concept (low prior art overlap = high bonus)
-    novel = CriticScore(conceptual_novelty=8, feasibility=7, utility=8, semantic_jump=6, prior_art_overlap=1, rationale="R", evolutionary_directive="D")
+    novel = CriticScore(
+        conceptual_novelty=8,
+        feasibility=7,
+        utility=8,
+        semantic_jump=6,
+        prior_art_overlap=1,
+        rationale="R",
+        evolutionary_directive="D",
+    )
     # Derivative concept (high prior art overlap = low bonus)
-    derivative = CriticScore(conceptual_novelty=8, feasibility=7, utility=8, semantic_jump=6, prior_art_overlap=9, rationale="R", evolutionary_directive="D")
+    derivative = CriticScore(
+        conceptual_novelty=8,
+        feasibility=7,
+        utility=8,
+        semantic_jump=6,
+        prior_art_overlap=9,
+        rationale="R",
+        evolutionary_directive="D",
+    )
 
     assert novel.composite_score > derivative.composite_score

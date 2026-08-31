@@ -118,18 +118,34 @@ class LLMEngine:
         if shutil.which("claude"):
             pool.append({"model": "claude-cli", "api_key": None, "label": CLAUDE_CLI_LABEL})
         if settings.anthropic_api_key:
-            pool.append({"model": "anthropic/claude-3-5-haiku-20241022", "api_key": settings.anthropic_api_key, "label": "Anthropic"})
+            pool.append({
+                "model": "anthropic/claude-3-5-haiku-20241022",
+                "api_key": settings.anthropic_api_key,
+                "label": "Anthropic",
+            })
         if settings.openai_api_key:
             pool.append({"model": "gpt-4o-mini", "api_key": settings.openai_api_key, "label": "OpenAI"})
         if settings.groq_api_key:
-            pool.append({"model": "groq/llama-3.3-70b-versatile", "api_key": settings.groq_api_key, "label": "Groq"})
+            pool.append({
+                "model": "groq/llama-3.3-70b-versatile",
+                "api_key": settings.groq_api_key,
+                "label": "Groq",
+            })
         if settings.gemini_api_key:
             pool.append({"model": "gemini/gemini-1.5-flash", "api_key": settings.gemini_api_key, "label": "Gemini"})
         if settings.mistral_api_key:
-            pool.append({"model": "mistral/mistral-small-latest", "api_key": settings.mistral_api_key, "label": "Mistral"})
+            pool.append({
+                "model": "mistral/mistral-small-latest",
+                "api_key": settings.mistral_api_key,
+                "label": "Mistral",
+            })
 
         if settings.openrouter_api_key:
-            pool.append({"model": "openrouter/openai/gpt-4o-mini", "api_key": settings.openrouter_api_key, "label": "OpenRouter (Paid)"})
+            pool.append({
+                "model": "openrouter/openai/gpt-4o-mini",
+                "api_key": settings.openrouter_api_key,
+                "label": "OpenRouter (Paid)",
+            })
 
             # Free-tier models are last-resort only: unranked for quality, so they never
             # outrank a paid/subscription provider. Appended at the end of the pool.
@@ -141,7 +157,11 @@ class LLMEngine:
                         or_models = resp.json().get("data", [])
                         free_models = [m for m in or_models if m.get("pricing", {}).get("prompt") == "0"]
                         for fm in free_models[:5]:
-                            pool.append({"model": f"openrouter/{fm['id']}", "api_key": settings.openrouter_api_key, "label": f"OpenRouter (Free: {fm['id']})"})
+                            pool.append({
+                                "model": f"openrouter/{fm['id']}",
+                                "api_key": settings.openrouter_api_key,
+                                "label": f"OpenRouter (Free: {fm['id']})",
+                            })
             except Exception as e:
                 logger.warning(f"Could not fetch dynamic OpenRouter free-tier models: {e}. Skipping free fallback.")
 
@@ -152,7 +172,9 @@ class LLMEngine:
         if not self.providers:
             raise RuntimeError("No API keys found for any supported provider.")
 
-        order = [i for i in range(len(self.providers)) if i not in self._blacklisted] or list(range(len(self.providers)))
+        order = [i for i in range(len(self.providers)) if i not in self._blacklisted] or list(
+            range(len(self.providers))
+        )
 
         last_exception = None
         for idx in order:
@@ -174,14 +196,25 @@ class LLMEngine:
                 self.stats.record_failure()
                 last_exception = e
                 if is_permanent:
-                    logger.warning(f"Provider {provider['label']} permanently unavailable this session ({err_desc}); blacklisting.")
+                    logger.warning(
+                        f"Provider {provider['label']} permanently unavailable this session "
+                        f"({err_desc}); blacklisting."
+                    )
                     self._blacklisted.add(idx)
                 else:
-                    reason = "low quality response" if is_validation_error else ("timeout" if is_timeout else "transient error")
-                    logger.warning(f"Provider {provider['label']} failed ({reason}): {err_desc}; falling back for this call.")
+                    reason = (
+                        "low quality response"
+                        if is_validation_error
+                        else ("timeout" if is_timeout else "transient error")
+                    )
+                    logger.warning(
+                        f"Provider {provider['label']} failed ({reason}): {err_desc}; falling back for this call."
+                    )
                 continue
 
-        last_desc = str(last_exception) or (f"{type(last_exception).__name__} (no message)" if last_exception else "unknown")
+        last_desc = str(last_exception) or (
+            f"{type(last_exception).__name__} (no message)" if last_exception else "unknown"
+        )
         raise RuntimeError(f"All LLM providers failed. Last error: {last_desc}")
 
     # litellm.exceptions.RateLimitError is NOT a subclass of litellm.exceptions.APIError
@@ -197,11 +230,17 @@ class LLMEngine:
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=2, min=4, max=20),
-        retry=retry_if_exception_type((exceptions.ServiceUnavailableError, exceptions.APIError, exceptions.RateLimitError)),
+        retry=retry_if_exception_type(
+            (exceptions.ServiceUnavailableError, exceptions.APIError, exceptions.RateLimitError)
+        ),
     )
-    async def _try_provider(self, provider: dict, messages: list[dict], temperature: float, response_format: type[T]) -> T:
+    async def _try_provider(
+        self, provider: dict, messages: list[dict], temperature: float, response_format: type[T]
+    ) -> T:
         if provider["model"] == "claude-cli":
-            logger.debug(f"claude-cli provider has no temperature flag; requested temperature={temperature} will be ignored.")
+            logger.debug(
+                f"claude-cli provider has no temperature flag; requested temperature={temperature} will be ignored."
+            )
             return await self._try_claude_cli(messages, response_format)
         async with self.api_semaphore:
             start = time.monotonic()
@@ -279,7 +318,9 @@ class LLMEngine:
                 output_tokens=usage.get("output_tokens", 0),
                 latency_ms=elapsed_ms,
             )
-            logger.debug(f"LLM call to {CLAUDE_CLI_LABEL}: {elapsed_ms:.0f}ms, cost~${payload.get('total_cost_usd', 0):.4f}")
+            logger.debug(
+                f"LLM call to {CLAUDE_CLI_LABEL}: {elapsed_ms:.0f}ms, cost~${payload.get('total_cost_usd', 0):.4f}"
+            )
 
             return response_format.model_validate(structured)
 

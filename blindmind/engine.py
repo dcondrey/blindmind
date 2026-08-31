@@ -82,7 +82,9 @@ class EvolutionEngine:
         self,
         generation: int,
         population_size: int,
-        on_survivor: Callable[[tuple[MutationOutput, CriticScore, list[UUID], MutationType]], Awaitable[None]] | None = None,
+        on_survivor: (
+            Callable[[tuple[MutationOutput, CriticScore, list[UUID], MutationType]], Awaitable[None]] | None
+        ) = None,
     ) -> list[tuple[MutationOutput, CriticScore, list[UUID], MutationType]]:
         logger.info(f"Starting generation {generation} cycle. Target population: {population_size}")
         if self.directive:
@@ -109,7 +111,10 @@ class EvolutionEngine:
                     if critique.composite_score >= self.adaptive_threshold:
                         survivors.append(res)
                         batch_successes += 1
-                        logger.info(f"Survivor: '{mutation.title}' (score={critique.composite_score:.2f}, type={m_type})")
+                        logger.info(
+                            f"Survivor: '{mutation.title}' "
+                            f"(score={critique.composite_score:.2f}, type={m_type})"
+                        )
                         if on_survivor is not None:
                             # Persist immediately: an outer per-generation timeout
                             # cancels this coroutine mid-loop, and a survivor only
@@ -121,7 +126,11 @@ class EvolutionEngine:
                             break
                     else:
                         if critique.fatal_flaws:
-                            logger.debug(f"Rejected '{mutation.title}' (score={critique.composite_score:.2f}, flaws: {'; '.join(critique.fatal_flaws)})")
+                            flaws = "; ".join(critique.fatal_flaws)
+                            logger.debug(
+                                f"Rejected '{mutation.title}' "
+                                f"(score={critique.composite_score:.2f}, flaws: {flaws})"
+                            )
                         self.rejected_titles.append(mutation.title)
                         consecutive_failures += 1
 
@@ -140,11 +149,16 @@ class EvolutionEngine:
                 logger.info(f"Adaptive pressure: threshold raised {old:.1f} -> {self.adaptive_threshold:.1f}")
 
             attempts += batch_size
-            logger.info(f"Progress: {len(survivors)}/{population_size} survivors (threshold={self.adaptive_threshold:.1f}, attempts={attempts})")
+            logger.info(
+                f"Progress: {len(survivors)}/{population_size} survivors "
+                f"(threshold={self.adaptive_threshold:.1f}, attempts={attempts})"
+            )
 
         return survivors
 
-    async def _create_candidate(self, generation: int) -> tuple[MutationOutput, CriticScore, list[UUID], MutationType] | None:
+    async def _create_candidate(
+        self, generation: int
+    ) -> tuple[MutationOutput, CriticScore, list[UUID], MutationType] | None:
         try:
             choice = random.random()
 

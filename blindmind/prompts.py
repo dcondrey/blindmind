@@ -1,7 +1,8 @@
 from jinja2 import Template
 
 CROSSOVER_PROMPT = Template("""
-You are an expert combinatorial thinker. Perform a 'Combinatorial Explosion' by smashing the following disparate concepts together to generate a highly specific, novel thesis, application, or paradigm.
+You are an expert combinatorial thinker. Perform a 'Combinatorial Explosion' by smashing the following
+disparate concepts together to generate a highly specific, novel thesis, application, or paradigm.
 
 {% if directive %}
 EVOLUTIONARY DIRECTIVE (ADAPTIVE PRESSURE):
@@ -28,13 +29,16 @@ TASK:
 2. Find a non-obvious bridge between these principles that creates emergent behavior neither parent exhibits alone.
 3. Synthesize a NEW concept that could not be trivially derived from either parent.
 4. The result must be specific enough to prototype (not just a vague theme).
-5. Provide a punchy title, the primary domain it belongs to, a detailed description of its mechanics, and a justification for why this combination is novel.
+5. Provide a punchy title, the primary domain it belongs to, a detailed description of its mechanics, and
+   a justification for why this combination is novel.
 
-QUALITY BAR: A good crossover is NOT "X applied to Y." It is a third thing that emerges from the collision of X and Y's core mechanics.
+QUALITY BAR: A good crossover is NOT "X applied to Y." It is a third thing that emerges from the collision
+of X and Y's core mechanics.
 """)
 
 POINT_MUTATION_PROMPT = Template("""
-You are an expert in lateral thinking. Perform a 'Point Mutation' on the following concept to shift it into genuinely novel territory.
+You are an expert in lateral thinking. Perform a 'Point Mutation' on the following concept to shift it
+into genuinely novel territory.
 
 {% if directive %}
 EVOLUTIONARY DIRECTIVE (ADAPTIVE PRESSURE):
@@ -56,12 +60,15 @@ ORIGINAL CONCEPT:
 
 TASK:
 1. Identify the single most load-bearing assumption in this concept.
-2. Replace that assumption with one from a completely different domain (e.g., swap an economic assumption for a biological one, or a physical constraint for a social one).
+2. Replace that assumption with one from a completely different domain (e.g., swap an economic assumption
+   for a biological one, or a physical constraint for a social one).
 3. Follow the implications of this swap to their logical conclusion and construct a new, coherent concept.
 4. The result must be specific enough to prototype, not a vague restatement.
-5. Provide a punchy title, the primary domain it belongs to, a detailed description of its mechanics, and a justification.
+5. Provide a punchy title, the primary domain it belongs to, a detailed description of its mechanics, and
+   a justification.
 
-AVOID: Simply rephrasing the original, changing the domain label without changing the mechanics, or adding a buzzword prefix.
+AVOID: Simply rephrasing the original, changing the domain label without changing the mechanics, or adding
+a buzzword prefix.
 """)
 
 INVERSION_PROMPT = Template("""
@@ -87,14 +94,17 @@ ORIGINAL CONCEPT:
 
 TASK:
 1. Identify the core axiom or governing mechanic of this concept.
-2. REVERSE it: if it centralizes, decentralize. If it's pull-based, make it push-based. If it optimizes for X, optimize for the opposite of X.
+2. REVERSE it: if it centralizes, decentralize. If it's pull-based, make it push-based. If it optimizes for
+   X, optimize for the opposite of X.
 3. Construct a new, functional concept based on this inverted logic that is internally consistent.
 4. Explain WHY the inversion produces something useful, not just contrarian.
-5. Provide a punchy title, the primary domain it belongs to, a detailed description of its mechanics, and a justification.
+5. Provide a punchy title, the primary domain it belongs to, a detailed description of its mechanics, and
+   a justification.
 """)
 
 WILDCARD_PROMPT = Template("""
-You are a frontier researcher tasked with generating a genuinely novel concept that does not yet exist in the following knowledge base.
+You are a frontier researcher tasked with generating a genuinely novel concept that does not yet exist in
+the following knowledge base.
 
 {% if directive %}
 EVOLUTIONARY DIRECTIVE (ADAPTIVE PRESSURE):
@@ -115,11 +125,13 @@ TASK:
 1. Identify a gap in the latent space above: what domains, intersections, or paradigms are missing?
 2. Generate a specific, novel concept that fills that gap.
 3. The concept must be concrete enough to prototype and distinct from everything above.
-4. Provide a punchy title, the primary domain it belongs to, a detailed description of its mechanics, and a justification for why this fills a gap.
+4. Provide a punchy title, the primary domain it belongs to, a detailed description of its mechanics, and
+   a justification for why this fills a gap.
 """)
 
 CRITIC_PROMPT = Template("""
-You are an unforgiving intellectual critic, feasibility engineer, and novelty assessor. Critique the following novel concept.
+You are an unforgiving intellectual critic, feasibility engineer, and novelty assessor. Critique the
+following novel concept.
 
 CONCEPT TO CRITIQUE:
 - TITLE: {{ mutation.title }}
@@ -131,7 +143,8 @@ EXISTING CONCEPTS IN THE LATENT SPACE (for novelty comparison):
 {% for title in existing_titles %}
 - {{ title }}
 {% endfor %}
-Score conceptual novelty RELATIVE to the above. If this concept is just a minor variation of something already in the space, novelty should be LOW.
+Score conceptual novelty RELATIVE to the above. If this concept is just a minor variation of something
+already in the space, novelty should be LOW.
 {% endif %}
 
 TASK:
@@ -140,7 +153,8 @@ Score the concept from 1-10 on these strict vectors:
 2. Feasibility: Does it break known laws of physics, logic, or economics? Could someone actually build/implement this?
 3. Utility: Does it solve a real-world friction point or provide significant value?
 4. Semantic Jump: How far did the idea move from conventional thinking? (1=Incremental/Boring, 10=Radical/Genius Leap)
-5. Prior Art Overlap: How much does this overlap with known existing real-world work? (1=Completely Novel, 10=Already Exists/Well-Known)
+5. Prior Art Overlap: How much does this overlap with known existing real-world work? (1=Completely
+   Novel, 10=Already Exists/Well-Known)
 
 CALIBRATION: You are frequently overconfident about novelty and prior art from memory alone. If you are not
 certain whether something similar already exists, say so explicitly in the rationale rather than guessing a
@@ -154,5 +168,6 @@ Provide:
 - A brief rationale for your scores, flagging anywhere your prior-art judgment is uncertain rather than confirmed
 - A brief sketch of how this could actually be built or realized (implementation path), using concrete, named
   mechanisms
-- An EVOLUTIONARY DIRECTIVE: a one-sentence instruction for the next generation on what direction to push, based on the strengths or weaknesses of this idea
+- An EVOLUTIONARY DIRECTIVE: a one-sentence instruction for the next generation on what direction to push,
+  based on the strengths or weaknesses of this idea
 """)

@@ -58,7 +58,11 @@ def build_export(concepts, lineages, project, directive):
         unexportable.setdefault(concept_id, reason)
 
     for concept_id, concept in by_id.items():
-        if not (concept.title or "").strip() or not (concept.domain or "").strip() or not (concept.description or "").strip():
+        if (
+            not (concept.title or "").strip()
+            or not (concept.domain or "").strip()
+            or not (concept.description or "").strip()
+        ):
             reject(concept_id, "missing a required v1 field (title, domain, or mechanism)")
         if concept_id in conflicting:
             reject(concept_id, "parents disagree on mutation type; v1 carries one operator per idea")
