@@ -20,10 +20,10 @@ settings.crossover_rate = 0.6
 settings.point_mutation_rate = 0.3
 settings.max_concurrent_calls = 3
 
-from blindmind.db import get_async_session, save_concept
+from blindmind.db import get_async_session
 from blindmind.engine import EvolutionEngine
 from blindmind.llm import CLAUDE_CLI_LABEL, llm_engine
-from blindmind.models import Concept
+from headless_common import persist_survivor
 
 llm_engine.providers = [{"model": "claude-cli", "api_key": None, "label": CLAUDE_CLI_LABEL}]
 llm_engine._initialized = True
@@ -63,18 +63,11 @@ DIRECTIVE0 = (
 async def main():
     async for session in get_async_session():
         engine = EvolutionEngine(session, directive=DIRECTIVE0, project=PROJECT)
-        survivors = await engine.run_generation_cycle(1, POPULATION)
-        for mutation, critique, parent_ids, m_type in survivors:
-            mt = getattr(m_type, "value", str(m_type))
-            tags = f"gen1,{mt},priorart{critique.prior_art_overlap},nov{critique.conceptual_novelty}"
-            concept = Concept(
-                project=PROJECT, domain=mutation.domain, title=mutation.title,
-                description=mutation.description, generation=1,
-                fitness_score=critique.composite_score, tags=tags,
-            )
-            await save_concept(session, concept, parent_ids=parent_ids, mutation_type=m_type)
-            log.info(f"  kept [{mutation.domain}] {mutation.title} "
-                      f"(score {critique.composite_score:.2f}, flaws={len(critique.fatal_flaws)})")
+
+        async def on_survivor(res):
+            await persist_survivor(session, PROJECT, 1, res, log, score_fmt=".2f", show_prior_art=False, show_flaws=True)
+
+        survivors = await engine.run_generation_cycle(1, POPULATION, on_survivor=on_survivor)
         log.info(f"Gen 1: {len(survivors)} retained")
         break
     s = llm_engine.stats.summary

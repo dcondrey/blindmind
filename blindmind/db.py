@@ -139,10 +139,11 @@ async def get_stats(session: AsyncSession, project: str = None) -> dict:
     seeds = (await session.execute(_where(select(func.count(Concept.id)).where(Concept.generation == 0)))).scalar() or 0
     evolved = total - seeds
 
-    gen_dist = {}
-    for gen in range(max_gen + 1):
-        count = (await session.execute(_where(select(func.count(Concept.id)).where(Concept.generation == gen)))).scalar() or 0
-        gen_dist[gen] = count
+    gen_rows = (await session.execute(
+        _where(select(Concept.generation, func.count(Concept.id)).group_by(Concept.generation))
+    )).all()
+    gen_dist = dict.fromkeys(range(max_gen + 1), 0)
+    gen_dist.update({gen: count for gen, count in gen_rows})
 
     return {
         "total": total, "generations": max_gen, "avg_fitness": round(avg_fitness, 2),

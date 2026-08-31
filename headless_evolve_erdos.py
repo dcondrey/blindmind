@@ -32,6 +32,7 @@ from blindmind.db import get_async_session, save_concept
 from blindmind.engine import EvolutionEngine
 from blindmind.llm import CLAUDE_CLI_LABEL, llm_engine
 from blindmind.models import Concept
+from headless_common import persist_survivor
 
 llm_engine.providers = [{"model": "claude-cli", "api_key": None, "label": CLAUDE_CLI_LABEL}]
 llm_engine._initialized = True
@@ -151,25 +152,12 @@ async def main():
         for gen in range(1, 1 + GENERATIONS):
             log.info(f"=== Generation {gen} ===")
             engine = EvolutionEngine(session, directive=directive, project=PROJECT)
-            survivors = await engine.run_generation_cycle(gen, POPULATION)
             weighted = []
-            for mutation, critique, parent_ids, m_type in survivors:
-                mt = getattr(m_type, "value", str(m_type))
-                tags = f"gen{gen},{mt},priorart{critique.prior_art_overlap},nov{critique.conceptual_novelty}"
-                concept = Concept(
-                    project=PROJECT,
-                    domain=mutation.domain,
-                    title=mutation.title,
-                    description=mutation.description,
-                    generation=gen,
-                    fitness_score=critique.composite_score,
-                    tags=tags,
-                )
-                await save_concept(session, concept, parent_ids=parent_ids, mutation_type=m_type)
-                weighted.append((critique.evolutionary_directive, critique.composite_score))
-                log.info(f"  kept [{mutation.domain}] {mutation.title} "
-                         f"(score {critique.composite_score:.2f}, priorArt {critique.prior_art_overlap}/10, "
-                         f"flaws={len(critique.fatal_flaws)})")
+
+            async def on_survivor(res, gen=gen, weighted=weighted):
+                weighted.append(await persist_survivor(session, PROJECT, gen, res, log, score_fmt=".2f", show_flaws=True))
+
+            survivors = await engine.run_generation_cycle(gen, POPULATION, on_survivor=on_survivor)
             if weighted:
                 directive = EvolutionEngine.synthesize_directives(weighted)
             log.info(f"Gen {gen}: {len(survivors)} retained")
