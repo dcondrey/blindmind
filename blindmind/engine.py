@@ -34,6 +34,7 @@ class EvolutionEngine:
         self.project = project
         self.crossover_rate = settings.crossover_rate
         self.point_mutation_rate = settings.point_mutation_rate
+        self.inversion_rate = settings.inversion_rate
         self.rejected_titles: list[str] = []
         self.adaptive_threshold = settings.critic_threshold
         self._latent_context = None
@@ -154,7 +155,7 @@ class EvolutionEngine:
                 m_type = MutationType.CROSSOVER
             elif choice < 0.1 + self.crossover_rate + self.point_mutation_rate:
                 return await self._create_point_mutation()
-            else:
+            elif choice < 0.1 + self.crossover_rate + self.point_mutation_rate + self.inversion_rate:
                 async with self._session_lock:
                     parents = await get_tournament_concepts(self.session, count=1, project=self.project)
                 if not parents:
@@ -166,6 +167,10 @@ class EvolutionEngine:
                     latent_space_context=self._latent_context,
                 )
                 m_type = MutationType.INVERSION
+            else:
+                # Any probability mass left over once wildcard/crossover/point-mutation/
+                # inversion rates are all accounted for falls back to point mutation.
+                return await self._create_point_mutation()
 
             mutation = await llm_engine.generate_mutation(prompt)
 

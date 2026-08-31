@@ -176,6 +176,7 @@ class LLMEngine:
     )
     async def _try_provider(self, provider: dict, messages: list[dict], temperature: float, response_format: type[T]) -> T:
         if provider["model"] == "claude-cli":
+            logger.debug(f"claude-cli provider has no temperature flag; requested temperature={temperature} will be ignored.")
             return await self._try_claude_cli(messages, response_format)
         async with self.semaphore:
             start = time.monotonic()
@@ -204,7 +205,10 @@ class LLMEngine:
         """Structured generation via the local Claude Code CLI, authenticated by
         subscription (not per-token API billing). Strips ANTHROPIC_API_KEY from the
         subprocess env so the CLI falls back to its keychain/OAuth subscription auth
-        instead of billing the (possibly empty) API key."""
+        instead of billing the (possibly empty) API key.
+
+        Note: the `claude` CLI has no --temperature flag, so settings.variation_temperature
+        / settings.critic_temperature have no effect when this provider is active."""
         prompt = "\n\n".join(m["content"] for m in messages)
         schema = response_format.model_json_schema()
         env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}

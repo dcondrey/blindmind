@@ -9,6 +9,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.prompt import Confirm, IntPrompt, Prompt
+from rich.markup import escape
 from rich.table import Table
 from sqlalchemy.sql.expression import func
 from sqlmodel import select
@@ -39,6 +40,24 @@ _active_project = "default"
 
 # --- Visual Helpers ---
 
+MUTATION_ICONS = {"CROSSOVER": "x", "POINT_MUTATION": "~", "INVERSION": "!", "WILDCARD": "*"}
+MUTATION_LABELS = {"CROSSOVER": "Crossover", "POINT_MUTATION": "Mutation", "INVERSION": "Inversion", "WILDCARD": "Wildcard"}
+
+
+def _match_prefix(concepts, concept_id: str) -> Concept | None:
+    """Resolve a short concept-id prefix against an already-loaded list of concepts."""
+    return next((c for c in concepts if str(c.id).startswith(concept_id)), None)
+
+
+async def _find_concept_by_prefix(session, concept_id: str, project: str | None = None) -> Concept | None:
+    """Resolve a short concept-id prefix to a Concept, optionally scoped to a project
+    to avoid a prefix collision resolving to a concept in the wrong project."""
+    stmt = select(Concept)
+    if project:
+        stmt = stmt.where(Concept.project == project)
+    concepts = (await session.execute(stmt)).scalars().all()
+    return _match_prefix(concepts, concept_id)
+
 def score_bar(value: float, max_val: float = 10, width: int = 10) -> str:
     filled = int((value / max_val) * width)
     empty = width - filled
@@ -62,7 +81,6 @@ def mini_bar(value: int, max_val: int = 10) -> str:
     return f"[{color}]{'█' * filled}[/{color}][dim]{'░' * empty}[/dim]"
 
 def welcome_banner():
-    dna = "[dim cyan]╔══╗[/dim cyan]"
     art = (
         "[bold cyan]  ┌──────────────────────────────────┐[/bold cyan]\n"
         "[bold cyan]  │[/bold cyan]  [bold white]B L I N D M I N D[/bold white]   [dim]E L I T E[/dim]  [bold cyan]│[/bold cyan]\n"
@@ -83,11 +101,11 @@ async def ensure_setup() -> str:
 
     if not found_keys:
         rprint("\n[bold yellow]No API keys found.[/bold yellow]")
-        key = Prompt.ask("Enter [cyan]OPENAI_API_KEY[/cyan] (or blank to try others)")
+        key = Prompt.ask("Enter [cyan]OPENAI_API_KEY[/cyan] (or blank to try others)", password=True)
         if key:
             settings.openai_api_key = key
         else:
-            anthropic_key = Prompt.ask("Enter [cyan]ANTHROPIC_API_KEY[/cyan]")
+            anthropic_key = Prompt.ask("Enter [cyan]ANTHROPIC_API_KEY[/cyan]", password=True)
             if anthropic_key: settings.anthropic_api_key = anthropic_key
 
         if settings.openai_api_key or settings.anthropic_api_key:
@@ -171,6 +189,7 @@ async def run_evolution_logic(generations: int, population: int, threshold: floa
             border_style="cyan",
         ))
 
+        engine = None
         try:
             for gen in range(1, generations + 1):
                 run_obj.current_generation = gen
@@ -221,8 +240,8 @@ async def run_evolution_logic(generations: int, population: int, threshold: floa
                     if critique.fatal_flaws:
                         flaws_section = "\n[red]Flaws:[/red] " + "; ".join(critique.fatal_flaws)
 
-                    type_icon = {"CROSSOVER": "x", "POINT_MUTATION": "~", "INVERSION": "!", "WILDCARD": "*"}.get(m_type, "?")
-                    type_label = {"CROSSOVER": "Crossover", "POINT_MUTATION": "Mutation", "INVERSION": "Inversion", "WILDCARD": "Wildcard"}.get(m_type, m_type)
+                    type_icon = MUTATION_ICONS.get(m_type, "?")
+                    type_label = MUTATION_LABELS.get(m_type, m_type)
 
                     console.print(Panel(
                         f"[bold white]{mutation.title}[/bold white]\n"
@@ -426,10 +445,13 @@ async def pick_concept_id(project: str, prompt_label: str = "Pick") -> str | Non
         return pick.strip()
 
 
-async def view_concept_logic(concept_id: str):
+async def view_concept_logic(concept_id: str, project: str | None = None):
     async for session in get_async_session():
-        all_concepts = (await session.execute(select(Concept))).scalars().all()
-        concept = next((c for c in all_concepts if str(c.id).startswith(concept_id)), None)
+        stmt = select(Concept)
+        if project:
+            stmt = stmt.where(Concept.project == project)
+        all_concepts = (await session.execute(stmt)).scalars().all()
+        concept = _match_prefix(all_concepts, concept_id)
         if not concept:
             rprint(f"[red]Not found: '{concept_id}'[/red]")
             return
@@ -450,7 +472,7 @@ async def view_concept_logic(concept_id: str):
             for l in parent_links:
                 p = next((c for c in all_concepts if c.id == l.parent_id), None)
                 if p:
-                    icon = {"CROSSOVER": "x", "POINT_MUTATION": "~", "INVERSION": "!", "WILDCARD": "*"}.get(l.mutation_type, "?")
+                    icon = MUTATION_ICONS.get(l.mutation_type, "?")
                     parent_lines.append(f"  [{icon}] [cyan]{p.title}[/cyan] [dim]({p.domain}, Gen {p.generation})[/dim]")
             if parent_lines:
                 lineage_text += "\n[dim]Parents:[/dim]\n" + "\n".join(parent_lines)
@@ -460,7 +482,7 @@ async def view_concept_logic(concept_id: str):
             for l in child_links:
                 ch = next((c for c in all_concepts if c.id == l.child_id), None)
                 if ch:
-                    icon = {"CROSSOVER": "x", "POINT_MUTATION": "~", "INVERSION": "!", "WILDCARD": "*"}.get(l.mutation_type, "?")
+                    icon = MUTATION_ICONS.get(l.mutation_type, "?")
                     fit_ch = f" {ch.fitness_score:.1f}" if ch.fitness_score else ""
                     child_lines.append(f"  [{icon}] [green]{ch.title}[/green] [dim]({ch.domain}, Gen {ch.generation}{fit_ch})[/dim]")
             if child_lines:
@@ -478,10 +500,9 @@ async def view_concept_logic(concept_id: str):
             border_style="blue",
         ))
 
-async def delete_concept_logic(concept_id: str):
+async def delete_concept_logic(concept_id: str, project: str | None = None):
     async for session in get_async_session():
-        all_concepts = (await session.execute(select(Concept))).scalars().all()
-        concept = next((c for c in all_concepts if str(c.id).startswith(concept_id)), None)
+        concept = await _find_concept_by_prefix(session, concept_id, project=project)
         if not concept:
             rprint(f"[red]Not found: '{concept_id}'[/red]")
             return
@@ -576,21 +597,25 @@ async def display_graph_logic(project: str = None):
 
         roots = [c for c in concepts if c.id not in has_parent]
 
-        root_tree = Tree(f"[bold cyan]{project or 'all'}[/bold cyan] [dim]lineage[/dim]")
+        root_tree = Tree(f"[bold cyan]{escape(project or 'all')}[/bold cyan] [dim]lineage[/dim]")
 
+        # children_map/concept_map close over names built in this same iteration of the
+        # `async for session in get_async_session()` loop, which yields exactly once
+        # (single `async with` session), so they never change underneath this recursive
+        # closure. Safe as written; not a real B023 hazard.
         def add_children(tree_node, concept_id):
             for child_id, mut_type in children_map.get(concept_id, []):
                 child = concept_map.get(child_id)
                 if not child:
                     continue
-                icon = {"CROSSOVER": "x", "POINT_MUTATION": "~", "INVERSION": "!", "WILDCARD": "*"}.get(mut_type, "?")
+                icon = MUTATION_ICONS.get(mut_type, "?")
                 fit = f" [green]{child.fitness_score:.1f}[/green]" if child.fitness_score else ""
-                node = tree_node.add(f"[{icon}] [bold]{child.title}[/bold] [magenta]{child.domain}[/magenta] [dim]Gen {child.generation}[/dim]{fit}")
+                node = tree_node.add(f"[{icon}] [bold]{escape(child.title)}[/bold] [magenta]{escape(child.domain)}[/magenta] [dim]Gen {child.generation}[/dim]{fit}")
                 add_children(node, child_id)
 
         for root in roots:
             fit = f" [green]{root.fitness_score:.1f}[/green]" if root.fitness_score else ""
-            node = root_tree.add(f"[bold]{root.title}[/bold] [magenta]{root.domain}[/magenta] [dim]Gen {root.generation}[/dim]{fit}")
+            node = root_tree.add(f"[bold]{escape(root.title)}[/bold] [magenta]{escape(root.domain)}[/magenta] [dim]Gen {root.generation}[/dim]{fit}")
             add_children(node, root.id)
 
         console.print(root_tree)
@@ -607,9 +632,12 @@ async def export_graph_logic(file: str, project: str = None):
         lineages = (await session.execute(select(Lineage))).scalars().all()
         relevant_lineages = [l for l in lineages if l.child_id in concept_ids]
 
+        def dot_escape(s: str) -> str:
+            return str(s).replace("\\", "\\\\").replace('"', '\\"')
+
         dot_content = ["digraph BlindMind {", '  node [shape=box, fontname="Arial", style=filled, fillcolor="#f0f0f0"];', '  rankdir="LR";']
         for c in concepts:
-            label = f"{c.title}\\n(Gen {c.generation})\\nScore: {c.fitness_score or 'N/A'}"
+            label = f"{dot_escape(c.title)}\\n(Gen {c.generation})\\nScore: {c.fitness_score or 'N/A'}"
             color = "#e1f5fe" if c.generation == 0 else "#c8e6c9"
             dot_content.append(f'  "{c.id}" [label="{label}", fillcolor="{color}"];')
         for l in relevant_lineages:
@@ -619,22 +647,25 @@ async def export_graph_logic(file: str, project: str = None):
             f.write("\n".join(dot_content))
         rprint(f"  [green]Graph exported to {file}[/green]")
 
-async def tree_lineage_logic(concept_id: str):
+async def tree_lineage_logic(concept_id: str, project: str | None = None):
     from rich.tree import Tree
     async for session in get_async_session():
-        all_concepts = (await session.execute(select(Concept))).scalars().all()
-        concept = next((c for c in all_concepts if str(c.id).startswith(concept_id)), None)
+        concept = await _find_concept_by_prefix(session, concept_id, project=project)
         if not concept:
             rprint("[red]Not found.[/red]")
             return
-        root = Tree(f"[bold green]{concept.title}[/bold green] [dim]Gen {concept.generation}[/dim]")
+        root = Tree(f"[bold green]{escape(concept.title)}[/bold green] [dim]Gen {concept.generation}[/dim]")
+        # `session` is a closure over the `async for session in get_async_session()` loop
+        # variable, but that generator yields exactly once (single `async with` session),
+        # so the loop body never runs a second time and `session` never changes underneath
+        # this recursive closure. Safe as written; not a real B023 hazard.
         async def add_parents(t, cid):
             links = (await session.execute(select(Lineage).where(Lineage.child_id == cid))).scalars().all()
-            for l in links:
-                p = (await session.execute(select(Concept).where(Concept.id == l.parent_id))).scalars().first()
+            for link in links:
+                p = (await session.execute(select(Concept).where(Concept.id == link.parent_id))).scalars().first()
                 if p:
-                    icon = {"CROSSOVER": "x", "POINT_MUTATION": "~", "INVERSION": "!", "WILDCARD": "*"}.get(l.mutation_type, "?")
-                    node = t.add(f"[cyan]{p.title}[/cyan] [dim]Gen {p.generation} [{icon}][/dim]")
+                    icon = MUTATION_ICONS.get(link.mutation_type, "?")
+                    node = t.add(f"[cyan]{escape(p.title)}[/cyan] [dim]Gen {p.generation} [{icon}][/dim]")
                     await add_parents(node, p.id)
         await add_parents(root, concept.id)
         console.print(root)
@@ -727,11 +758,11 @@ def main(ctx: typer.Context):
                     elif choice in ("v", "5", "view"):
                         cid = await pick_concept_id(_active_project, "View")
                         if cid:
-                            await view_concept_logic(cid)
+                            await view_concept_logic(cid, project=_active_project)
                     elif choice in ("t", "6", "tree"):
                         cid = await pick_concept_id(_active_project, "Tree")
                         if cid:
-                            await tree_lineage_logic(cid)
+                            await tree_lineage_logic(cid, project=_active_project)
                     elif choice in ("g", "7", "graph"):
                         await display_graph_logic(project=_active_project)
                     elif choice in ("x", "8", "export"):
@@ -774,7 +805,7 @@ def main(ctx: typer.Context):
                     elif choice in ("d", "13", "delete"):
                         cid = await pick_concept_id(_active_project, "Delete")
                         if cid:
-                            await delete_concept_logic(cid)
+                            await delete_concept_logic(cid, project=_active_project)
                     elif choice in ("p", "14", "project"):
                         async for session in get_async_session():
                             projects = await get_projects(session)
@@ -870,14 +901,14 @@ def search(query: str = typer.Argument(...), domain: str | None = typer.Option(N
     asyncio.run(search_concepts_logic(query, domain=domain, min_fitness=min_fitness, limit=limit, project=project))
 
 @app.command()
-def view(concept_id: str):
+def view(concept_id: str, project: str | None = typer.Option(None, "-p")):
     """View a concept."""
-    asyncio.run(view_concept_logic(concept_id))
+    asyncio.run(view_concept_logic(concept_id, project=project))
 
 @app.command()
-def delete(concept_id: str):
+def delete(concept_id: str, project: str | None = typer.Option(None, "-p")):
     """Delete a concept."""
-    asyncio.run(delete_concept_logic(concept_id))
+    asyncio.run(delete_concept_logic(concept_id, project=project))
 
 @app.command()
 def stats(project: str | None = typer.Option(None, "-p")):
@@ -890,9 +921,9 @@ def graph(file: str = "evolution_graph.dot", project: str | None = typer.Option(
     asyncio.run(export_graph_logic(file, project=project))
 
 @app.command()
-def tree(concept_id: str):
+def tree(concept_id: str, project: str | None = typer.Option(None, "-p")):
     """Visualize ancestry."""
-    asyncio.run(tree_lineage_logic(concept_id))
+    asyncio.run(tree_lineage_logic(concept_id, project=project))
 
 @app.command("export")
 def export_cmd(file: str = typer.Argument("blindmind_export.json"), project: str | None = typer.Option(None, "-p")):

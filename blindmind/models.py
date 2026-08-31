@@ -10,9 +10,6 @@ class MutationType(str, Enum):
     POINT_MUTATION = "POINT_MUTATION"
     INVERSION = "INVERSION"
     WILDCARD = "WILDCARD"
-    REWRITE = "REWRITE"
-    TIGHTEN = "TIGHTEN"
-    AMPLIFY = "AMPLIFY"
 
 
 class RunStatus(str, Enum):

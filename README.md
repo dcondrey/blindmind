@@ -5,7 +5,7 @@
 <h1 align="center">BlindMind</h1>
 
 <p align="center">
-  <strong>Evolutionary concept refinement — Blind Variation and Selective Retention (BVSR), driven by LLMs.</strong>
+  <strong>An idea breeder for LLMs — mutate, critique, and evolve concepts across generations until the best ones survive.</strong>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
 
 ---
 
-BlindMind is a command-line application that replicates the biological mechanism of "Blind Variation and Selective Retention" (BVSR) to generate and refine novel concepts using Large Language Models (LLMs).
+BlindMind runs your ideas through generations of evolution. Give it a seed concept (or a batch of them), and each round an LLM crosses and mutates them into new candidates, a second LLM pass critiques and scores each one, and only what clears the bar survives to breed the next generation — optionally with you scoring alongside the AI critic. The result is a growing, searchable tree of concepts with full lineage back to their seeds, not a single one-shot brainstorm. This is the biological mechanism of "Blind Variation and Selective Retention" (BVSR) applied to LLM-generated ideas.
 
 ## Core Architecture
 

@@ -1,8 +1,11 @@
+import logging
 import os
 from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_log = logging.getLogger("blindmind.config")
 
 
 class Settings(BaseSettings):
@@ -68,6 +71,7 @@ class Settings(BaseSettings):
 
         with open(".env", "w") as f:
             f.write("\n".join(f"{k}={v}" for k, v in existing.items()))
+        os.chmod(".env", 0o600)
 
 def discover_api_keys():
     """Aggressively search for API keys in environment and dotfiles."""
@@ -104,7 +108,8 @@ def discover_api_keys():
                             if val:
                                 setattr(s, attr, val)
                                 break
-            except Exception:
+            except Exception as e:
+                _log.debug(f"Failed to scan {p} for API keys: {e}")
                 continue
 
     return s
