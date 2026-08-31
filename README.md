@@ -5,7 +5,7 @@
 <h1 align="center">BlindMind</h1>
 
 <p align="center">
-  <strong>An idea breeder for LLMs — mutate, critique, and evolve concepts across generations until the best ones survive.</strong>
+  <strong>The personal, local-first alternative to FunSearch/AlphaEvolve/EvoGens — for concepts, not code.</strong>
 </p>
 
 <p align="center">
@@ -22,12 +22,15 @@
   <a href="#core-architecture">Architecture</a> &middot;
   <a href="#commands">Commands</a> &middot;
   <a href="#evolution-parameters">Parameters</a> &middot;
+  <a href="#related-work">Related Work</a> &middot;
   <a href="#contributing">Contributing</a>
 </p>
 
 ---
 
-BlindMind runs your ideas through generations of evolution. Give it a seed concept (or a batch of them), and each round an LLM crosses and mutates them into new candidates, a second LLM pass critiques and scores each one, and only what clears the bar survives to breed the next generation — optionally with you scoring alongside the AI critic. The result is a growing, searchable tree of concepts with full lineage back to their seeds, not a single one-shot brainstorm. This is the biological mechanism of "Blind Variation and Selective Retention" (BVSR) applied to LLM-generated ideas.
+BlindMind is a lab notebook that does **Blind Variation and Selective Retention (BVSR)** on your ideas. Give it a seed concept (or a batch of them), and each round an LLM crosses and mutates them at high temperature into new candidates ("blind variation"), a second, low-temperature LLM pass critiques and scores each one ("selective retention") — optionally blended with your own score — and only what clears the bar survives to breed the next generation. The result is a growing, searchable tree of concepts with full parent-child lineage back to their seeds, not a single one-shot brainstorm.
+
+FunSearch, AlphaEvolve, and research systems like EvoGens run this same LLM-evolutionary loop for code and algorithms, scored automatically. BlindMind applies it to human-facing concepts instead, as a local-first CLI with your own SQLite database and no hosted service — and it's the AI critic *plus you*, not the AI critic alone, that decides what survives. (For the closest existing prior art and an honest read on what's actually novel here vs. established technique, see [Related Work](#related-work).)
 
 ## Core Architecture
 
@@ -133,6 +136,17 @@ uv run ruff check .           # lint
 uv run ruff format --check .  # formatting
 uv run pytest -v              # tests
 ```
+
+## Related Work
+
+"LLM as mutation/crossover operator, scored across generations" is an established technique, not something invented here — worth knowing before assuming this is unprecedented:
+
+- **[FunSearch](https://www.emergentmind.com/topics/funsearch-algorithm)** (DeepMind) and **[OpenEvolve](https://github.com/celerycelery/openevolve)** (an open AlphaEvolve reimplementation) run the same generational loop with explicit lineage, but for code/algorithm discovery scored by program execution — not concepts, not human-scored.
+- **[EvoGens](https://arxiv.org/pdf/2605.30961)** applies it to scientific research-idea generation, closer to BlindMind's domain — but its scorer is LLM-based throughout; no human rating enters the loop.
+- **[Promptbreeder](https://arxiv.org/pdf/2309.16797)** and **[EvoPrompt](https://arxiv.org/abs/2309.08532)** use the identical mutation/crossover/fitness mechanism to evolve *prompts*, not human-facing ideas.
+- **[genetic-mcp](https://github.com/andrasfe/genetic-mcp)** is the closest match found: an MCP server doing genetic-algorithm brainstorming with LLM crossover/mutation and claimed lineage tracking. Its "evaluation mode" is still an LLM call scoring other LLM output, not a person — and as an MCP server it needs a live agent session rather than running as a local, standalone CLI against your own database.
+
+What doesn't appear to exist elsewhere, based on that search: the combination of a local-first CLI (no hosted service, no live agent session required), durable per-project SQLite storage with full queryable ancestry, and a genuine human rating blended by formula with the AI critic's score — applied to concepts rather than code, prompts, or reward functions.
 
 ## Contributing
 
