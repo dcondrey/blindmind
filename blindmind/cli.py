@@ -1,4 +1,5 @@
 import asyncio
+import difflib
 import json
 import os
 from datetime import UTC, datetime
@@ -6,10 +7,10 @@ from datetime import UTC, datetime
 import typer
 from rich import print as rprint
 from rich.console import Console
+from rich.markup import escape
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.prompt import Confirm, IntPrompt, Prompt
-from rich.markup import escape
 from rich.table import Table
 from sqlalchemy.sql.expression import func
 from sqlmodel import select
@@ -42,6 +43,14 @@ _active_project = "default"
 
 MUTATION_ICONS = {"CROSSOVER": "x", "POINT_MUTATION": "~", "INVERSION": "!", "WILDCARD": "*"}
 MUTATION_LABELS = {"CROSSOVER": "Crossover", "POINT_MUTATION": "Mutation", "INVERSION": "Inversion", "WILDCARD": "Wildcard"}
+
+# Long-form words accepted by the interactive menu, used only to suggest a close match
+# on an unrecognized choice (difflib.get_close_matches against single letters is
+# meaningless, so the letter shortcuts are intentionally excluded from this list).
+MENU_WORDS = [
+    "evolve", "seed", "list", "find", "search", "view", "tree", "graph", "stats",
+    "export", "import", "runs", "project", "config", "settings", "delete", "quit", "exit", "help",
+]
 
 
 def _match_prefix(concepts, concept_id: str) -> Concept | None:
@@ -170,6 +179,16 @@ async def ensure_setup() -> str:
 
 # --- Core Logic ---
 
+def _friendly_llm_error(msg: str) -> str:
+    """Appends a one-line, non-invented suggestion for the LLM failure classes
+    LLMEngine actually raises (see llm.py's _completion/_get_available_providers),
+    without fabricating recovery behavior that doesn't exist."""
+    if "No API keys found" in msg:
+        return f"{msg}\n  [dim]-> No provider is configured. Restart to be prompted for a key, or install the `claude` CLI.[/dim]"
+    if "All LLM providers failed" in msg:
+        return f"{msg}\n  [dim]-> Check your API key and network, or retry with a different --model.[/dim]"
+    return msg
+
 async def run_evolution_logic(generations: int, population: int, threshold: float = None, temperature: float = None, model: str = None, project: str = "default"):
     if threshold is not None:
         settings.critic_threshold = threshold
@@ -209,7 +228,11 @@ async def run_evolution_logic(generations: int, population: int, threshold: floa
                     survivors = await engine.run_generation_cycle(gen, population)
 
                 if not survivors:
-                    rprint(f"[red]Gen {gen}: No candidates passed (threshold: {engine.adaptive_threshold:.1f}). Try lowering it.[/red]")
+                    if engine.last_error:
+                        rprint(f"[bold red]Gen {gen}: no candidates generated -- LLM calls failed.[/bold red]")
+                        rprint(f"  [dim]{_friendly_llm_error(engine.last_error)}[/dim]")
+                    else:
+                        rprint(f"[red]Gen {gen}: No candidates passed (threshold: {engine.adaptive_threshold:.1f}). Try lowering it.[/red]")
                     break
 
                 rprint(f"\n[bold]{'─' * 50}[/bold]")
@@ -299,7 +322,7 @@ async def run_evolution_logic(generations: int, population: int, threshold: floa
         except Exception as e:
             logger.exception("Run failed")
             run_obj.status = RunStatus.FAILED
-            rprint(f"\n[bold red]Error:[/bold red] {e}")
+            rprint(f"\n[bold red]Error:[/bold red] {_friendly_llm_error(str(e))}")
         finally:
             run_obj.updated_at = datetime.now(UTC)
             session.add(run_obj)
@@ -437,12 +460,14 @@ async def pick_concept_id(project: str, prompt_label: str = "Pick") -> str | Non
 
         try:
             row_num = int(pick.strip())
-            if 1 <= row_num <= len(results):
-                return results[row_num - 1].short_id
         except ValueError:
-            pass
+            # Not a row number; treat it as a short-ID prefix instead.
+            return pick.strip()
 
-        return pick.strip()
+        if 1 <= row_num <= len(results):
+            return results[row_num - 1].short_id
+        rprint(f"  [yellow]Row {row_num} is out of range (1-{len(results)}).[/yellow]")
+        return None
 
 
 async def view_concept_logic(concept_id: str, project: str | None = None):
@@ -741,14 +766,22 @@ def main(ctx: typer.Context):
                         fitness_filter = None
                         for part in filter_str.split(","):
                             part = part.strip()
+                            if not part:
+                                continue
                             if part.startswith("gen:"):
-                                try: gen_filter = int(part[4:])
-                                except ValueError: pass
+                                try:
+                                    gen_filter = int(part[4:])
+                                except ValueError:
+                                    rprint(f"  [yellow]Ignored '{part}': expected an integer, e.g. gen:2[/yellow]")
                             elif part.startswith("domain:"):
                                 domain_filter = part[7:].strip()
                             elif part.startswith("fit:"):
-                                try: fitness_filter = float(part[4:])
-                                except ValueError: pass
+                                try:
+                                    fitness_filter = float(part[4:])
+                                except ValueError:
+                                    rprint(f"  [yellow]Ignored '{part}': expected a number, e.g. fit:7.5[/yellow]")
+                            else:
+                                rprint(f"  [yellow]Ignored '{part}': expected gen:N, domain:X, or fit:N[/yellow]")
                         await list_concepts_logic(gen_filter, 30, domain=domain_filter, min_fitness=fitness_filter, project=_active_project)
                     elif choice in ("f", "4", "find", "search"):
                         q = Prompt.ask("  Search [dim](empty to cancel)[/dim]", default="")
@@ -828,9 +861,15 @@ def main(ctx: typer.Context):
                                         rprint(f"  [green]Created: {_active_project}[/green]")
                                     else:
                                         continue
+                                else:
+                                    rprint(f"  [yellow]{pick_num} is out of range (1-{len(projects)+1}).[/yellow]")
+                                    continue
                             except ValueError:
                                 if pick.strip() in projects:
                                     _active_project = pick.strip()
+                                else:
+                                    rprint(f"  [yellow]'{pick.strip()}' is not a project number or an existing project name.[/yellow]")
+                                    continue
                         else:
                             new_proj = Prompt.ask("  Project name", default="")
                             if new_proj.strip():
@@ -860,7 +899,9 @@ def main(ctx: typer.Context):
                         rprint("  [dim]Done.[/dim]")
                         break
                     else:
-                        rprint(f"  [dim]Unknown: '{choice}' (type ? for help)[/dim]")
+                        suggestion = difflib.get_close_matches(choice, MENU_WORDS, n=1, cutoff=0.6)
+                        hint = f" Did you mean '{suggestion[0]}'?" if suggestion else ""
+                        rprint(f"  [dim]Unknown: '{choice_raw}'.{hint} (type ? for help)[/dim]")
                 except KeyboardInterrupt:
                     rprint("\n  [dim]Press q to exit.[/dim]")
                     continue
