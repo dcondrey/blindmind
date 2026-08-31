@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/dcondrey/blindmind/main/assets/icon.png" alt="BlindMind mascot" width="180">
+</p>
+
 <h1 align="center">BlindMind</h1>
 
 <p align="center">
