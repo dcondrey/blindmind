@@ -1,8 +1,9 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/dcondrey/blindmind/main/assets/icon.png" alt="BlindMind mascot" width="180">
-</p>
-
-<h1 align="center">BlindMind</h1>
+<table align="center" border="0">
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/dcondrey/blindmind/main/assets/icon.png" alt="BlindMind mascot" width="120"></td>
+    <td><h1>BlindMind</h1></td>
+  </tr>
+</table>
 
 <p align="center">
   <strong>The personal, local-first alternative to FunSearch/AlphaEvolve/EvoGens — for concepts, not code.</strong>
