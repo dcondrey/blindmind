@@ -184,7 +184,7 @@ def _friendly_llm_error(msg: str) -> str:
     LLMEngine actually raises (see llm.py's _completion/_get_available_providers),
     without fabricating recovery behavior that doesn't exist."""
     if "No API keys found" in msg:
-        return f"{msg}\n  [dim]-> No provider is configured. Restart to be prompted for a key, or install the `claude` CLI.[/dim]"
+        return f"{msg}\n  [dim]-> No provider is configured. Restart to be prompted for a key,\n     or install the `claude` CLI.[/dim]"
     if "All LLM providers failed" in msg:
         return f"{msg}\n  [dim]-> Check your API key and network, or retry with a different --model.[/dim]"
     return msg
@@ -868,7 +868,7 @@ def main(ctx: typer.Context):
                                 if pick.strip() in projects:
                                     _active_project = pick.strip()
                                 else:
-                                    rprint(f"  [yellow]'{pick.strip()}' is not a project number or an existing project name.[/yellow]")
+                                    rprint(f"  [yellow]'{pick.strip()}' is not a project number or an existing project.[/yellow]")
                                     continue
                         else:
                             new_proj = Prompt.ask("  Project name", default="")
