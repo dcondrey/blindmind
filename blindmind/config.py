@@ -27,7 +27,14 @@ class Settings(BaseSettings):
 
     # Evolutionary Settings
     critic_threshold: float = Field(default=7.0)
-    max_concurrent_calls: int = Field(default=2)
+    # This applies to real API-key providers (openai/anthropic/etc via litellm) only.
+    # The claude-cli subprocess provider is always capped at concurrency=1 in llm.py
+    # regardless of this setting (concurrent CLI subprocesses were observed to collide
+    # and blow the 240s per-call timeout; see headless_evolve_rule30.py). 4 is a
+    # moderate default: most API providers' free/starter tiers comfortably handle
+    # 4-5 concurrent calls without hitting per-minute rate limits, while still leaving
+    # headroom below tighter tiers. Raise it if your provider/tier supports more.
+    max_concurrent_calls: int = Field(default=4)
     crossover_rate: float = Field(default=0.5)
     point_mutation_rate: float = Field(default=0.3)
     inversion_rate: float = Field(default=0.2)

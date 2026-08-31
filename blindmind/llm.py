@@ -70,7 +70,18 @@ def _resolve_key_for_override(model: str) -> str | None:
 
 class LLMEngine:
     def __init__(self):
-        self.semaphore = asyncio.Semaphore(settings.max_concurrent_calls)
+        # Provider-aware concurrency: real API providers (openai/anthropic/etc via
+        # litellm) share settings.max_concurrent_calls. The claude-cli subprocess
+        # provider gets its own semaphore fixed at 1 -- it spawns a real subprocess
+        # per call with up to a 240s timeout, and concurrent subprocess invocations
+        # were observed to collide and blow that timeout (see the comment in
+        # headless_evolve_rule30.py, which hit this in a live run before pinning
+        # max_concurrent_calls=1 globally). Splitting the semaphores means that
+        # workaround is no longer necessary for correctness (it's still harmless if
+        # left in place) and a provider pool that mixes claude-cli with API
+        # providers no longer serializes the API calls unnecessarily.
+        self.api_semaphore = asyncio.Semaphore(settings.max_concurrent_calls)
+        self.claude_cli_semaphore = asyncio.Semaphore(1)
         self.providers = []
         self._blacklisted = set()
         self._explicit_override = None
@@ -169,16 +180,26 @@ class LLMEngine:
         last_desc = str(last_exception) or (f"{type(last_exception).__name__} (no message)" if last_exception else "unknown")
         raise RuntimeError(f"All LLM providers failed. Last error: {last_desc}")
 
+    # litellm.exceptions.RateLimitError is NOT a subclass of litellm.exceptions.APIError
+    # (they're siblings mirroring openai's own hierarchy: both derive from
+    # openai.APIStatusError, but litellm.APIError only wraps openai.APIError directly).
+    # It was previously uncovered here, so a rate limit propagated straight to
+    # _completion()'s per-provider fallback loop with no backoff at all -- which, with
+    # a single active provider, meant hammering the same rate limit again on the very
+    # next candidate. Retrying it here first (same provider, with backoff) is the right
+    # layer for a typically-short rate-limit window; _completion()'s fallback loop is
+    # the second-tier safety net if it's still failing after these retries are
+    # exhausted, so this isn't double-handling the same failure at the same layer.
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=2, min=4, max=20),
-        retry=retry_if_exception_type((exceptions.ServiceUnavailableError, exceptions.APIError)),
+        retry=retry_if_exception_type((exceptions.ServiceUnavailableError, exceptions.APIError, exceptions.RateLimitError)),
     )
     async def _try_provider(self, provider: dict, messages: list[dict], temperature: float, response_format: type[T]) -> T:
         if provider["model"] == "claude-cli":
             logger.debug(f"claude-cli provider has no temperature flag; requested temperature={temperature} will be ignored.")
             return await self._try_claude_cli(messages, response_format)
-        async with self.semaphore:
+        async with self.api_semaphore:
             start = time.monotonic()
             response = await asyncio.wait_for(
                 acompletion(
@@ -213,7 +234,7 @@ class LLMEngine:
         schema = response_format.model_json_schema()
         env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
 
-        async with self.semaphore:
+        async with self.claude_cli_semaphore:
             start = time.monotonic()
             proc = await asyncio.create_subprocess_exec(
                 "claude", "-p", prompt,

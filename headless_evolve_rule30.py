@@ -23,10 +23,14 @@ settings.critic_temperature = 0.1
 settings.critic_threshold = 2.0           # capture candidates for human curation; I am the filter, not the critic
 settings.crossover_rate = 0.6
 settings.point_mutation_rate = 0.3
-# Serial, not the usual 3: this project's directive is long enough (register
-# digest + forbidden-domain enumeration) that 3 concurrent claude-cli
-# subprocesses reliably pushed the 120s subprocess timeout in llm.py, timing
-# out every candidate in the first live run. A single ~73s call succeeds.
+# Serial, not the usual default: this project's directive is long enough (register
+# digest + forbidden-domain enumeration) that concurrent claude-cli subprocesses
+# reliably pushed the subprocess timeout in llm.py, timing out every candidate in
+# the first live run. A single ~73s call succeeds. LLMEngine now pins claude-cli to
+# concurrency=1 unconditionally (its own semaphore, separate from
+# max_concurrent_calls, which now only governs real API providers), so this line is
+# redundant for that guarantee -- kept anyway as an explicit, self-documenting
+# statement of intent for this script.
 settings.max_concurrent_calls = 1
 
 from blindmind.db import get_async_session, save_concept
