@@ -1,21 +1,23 @@
-<table align="center" border="0">
-  <tr>
-    <td><img src="https://raw.githubusercontent.com/dcondrey/blindmind/main/assets/icon.png" alt="BlindMind mascot" width="120"></td>
-    <td><h1>BlindMind</h1></td>
-  </tr>
-</table>
+<img src="./assets/icon.png" alt="BlindMind mascot" width="120" align="left">
+
+<h1>BlindMind</h1>
+<p><strong>The personal, local-first alternative to FunSearch/AlphaEvolve/EvoGens — for concepts, not code.</strong></p>
+
+<br clear="left">
+
+<!-- Badge palette: dynamic health; metadata #007ec6; standards #6a4c93; label #20232a; platform brand colors. -->
 
 <p align="center">
-  <strong>The personal, local-first alternative to FunSearch/AlphaEvolve/EvoGens — for concepts, not code.</strong>
-</p>
-
-<p align="center">
-  <a href="https://github.com/dcondrey/blindmind/actions/workflows/ci.yml"><img src="https://github.com/dcondrey/blindmind/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/dcondrey/blindmind/actions/workflows/codeql.yml"><img src="https://github.com/dcondrey/blindmind/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
-  <a href="https://scorecard.dev/viewer/?uri=github.com/dcondrey/blindmind"><img src="https://api.securityscorecards.dev/projects/github.com/dcondrey/blindmind/badge" alt="OpenSSF Scorecard"></a>
-  <a href="https://github.com/dcondrey/blindmind/blob/main/LICENSE"><img src="https://img.shields.io/github/license/dcondrey/blindmind" alt="license"></a>
-  <img src="https://img.shields.io/badge/python-3.11%2B-blue.svg" alt="python version">
-  <a href="https://github.com/dcondrey/blindmind/issues"><img src="https://img.shields.io/github/issues/dcondrey/blindmind" alt="issues"></a>
+  <a href="https://github.com/dcondrey/blindmind/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/dcondrey/blindmind/ci.yml?branch=main&amp;style=flat-square&amp;label=CI&amp;labelColor=20232a" alt="CI"></a>
+  <a href="https://github.com/dcondrey/blindmind/actions/workflows/codeql.yml"><img src="https://img.shields.io/github/actions/workflow/status/dcondrey/blindmind/codeql.yml?branch=main&amp;style=flat-square&amp;label=CodeQL&amp;labelColor=20232a" alt="CodeQL"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/dcondrey/blindmind"><img src="https://img.shields.io/ossf-scorecard/github.com/dcondrey/blindmind?style=flat-square&amp;labelColor=20232a" alt="OpenSSF Scorecard"></a>
+  <a href="./.bestpractices.json"><img src="https://img.shields.io/badge/best_practices-evidence-6a4c93?style=flat-square&amp;labelColor=20232a" alt="Best Practices evidence"></a>
+  <a href="https://github.com/dcondrey/blindmind/blob/main/LICENSE"><img src="https://img.shields.io/github/license/dcondrey/blindmind?style=flat-square&amp;color=007ec6&amp;labelColor=20232a" alt="Apache-2.0 license"></a>
+  <img src="https://img.shields.io/badge/python-3.11%2B-007ec6?style=flat-square&amp;labelColor=20232a&amp;logo=python&amp;logoColor=white" alt="Python 3.11+">
+  <img src="https://img.shields.io/badge/local--first-yes-007ec6?style=flat-square&amp;labelColor=20232a" alt="Local-first">
+  <a href="https://docs.astral.sh/ruff/"><img src="https://img.shields.io/badge/Ruff-checked-6a4c93?style=flat-square&amp;labelColor=20232a" alt="Ruff checked"></a>
+  <a href="./CODE_OF_CONDUCT.md"><img src="https://img.shields.io/badge/code_of_conduct-Contributor_Covenant_2.1-6a4c93?style=flat-square&amp;labelColor=20232a" alt="Contributor Covenant 2.1"></a>
+  <a href="https://github.com/sponsors/dcondrey"><img src="https://img.shields.io/badge/sponsor-dcondrey-EA4AAA?style=flat-square&amp;labelColor=20232a&amp;logo=githubsponsors&amp;logoColor=white" alt="Sponsor dcondrey"></a>
 </p>
 
 <p align="center">
