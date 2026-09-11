@@ -1,6 +1,6 @@
 <img src="./assets/icon.png" alt="BlindMind mascot" width="120" align="left">
 
-<h1>BlindMind</h1>
+<h3>BlindMind</h3>
 <p><strong>The personal, local-first alternative to FunSearch/AlphaEvolve/EvoGens — for concepts, not code.</strong></p>
 
 <br clear="left">
@@ -11,7 +11,6 @@
   <a href="https://github.com/dcondrey/blindmind/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/dcondrey/blindmind/ci.yml?branch=main&amp;style=flat-square&amp;label=CI&amp;labelColor=20232a" alt="CI"></a>
   <a href="https://github.com/dcondrey/blindmind/actions/workflows/codeql.yml"><img src="https://img.shields.io/github/actions/workflow/status/dcondrey/blindmind/codeql.yml?branch=main&amp;style=flat-square&amp;label=CodeQL&amp;labelColor=20232a" alt="CodeQL"></a>
   <a href="https://scorecard.dev/viewer/?uri=github.com/dcondrey/blindmind"><img src="https://img.shields.io/ossf-scorecard/github.com/dcondrey/blindmind?style=flat-square&amp;labelColor=20232a" alt="OpenSSF Scorecard"></a>
-  <a href="https://www.bestpractices.dev/projects/14400"><img src="https://www.bestpractices.dev/projects/14400/badge" alt="OpenSSF Best Practices"></a>
   <a href="https://github.com/dcondrey/blindmind/blob/main/LICENSE"><img src="https://img.shields.io/github/license/dcondrey/blindmind?style=flat-square&amp;color=007ec6&amp;labelColor=20232a" alt="Apache-2.0 license"></a>
   <img src="https://img.shields.io/badge/python-3.11%2B-007ec6?style=flat-square&amp;labelColor=20232a&amp;logo=python&amp;logoColor=white" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/local--first-yes-007ec6?style=flat-square&amp;labelColor=20232a" alt="Local-first">
