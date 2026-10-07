@@ -1,24 +1,11 @@
-<img src="./assets/icon.png" alt="BlindMind mascot" width="120" align="left">
+### BlindMind
 
-<h3>BlindMind</h3>
-<p><strong>The personal, local-first alternative to FunSearch/AlphaEvolve/EvoGens — for concepts, not code.</strong></p>
+<img align="left" width="96" alt="BlindMind logo" src="assets/icon.png">
+The personal, local-first alternative to FunSearch/AlphaEvolve/EvoGens, for concepts, not code.
 
 <br clear="left">
 
-<!-- Badge palette: dynamic health; metadata #007ec6; standards #6a4c93; label #20232a; platform brand colors. -->
-
-<p align="center">
-  <a href="https://www.bestpractices.dev/projects/14400"><img src="https://www.bestpractices.dev/projects/14400/badge" alt="OpenSSF Best Practices"></a>
-  <a href="https://github.com/dcondrey/blindmind/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/dcondrey/blindmind/ci.yml?branch=main&amp;style=flat-square&amp;label=CI&amp;labelColor=20232a" alt="CI"></a>
-  <a href="https://github.com/dcondrey/blindmind/actions/workflows/codeql.yml"><img src="https://img.shields.io/github/actions/workflow/status/dcondrey/blindmind/codeql.yml?branch=main&amp;style=flat-square&amp;label=CodeQL&amp;labelColor=20232a" alt="CodeQL"></a>
-  <a href="https://scorecard.dev/viewer/?uri=github.com/dcondrey/blindmind"><img src="https://img.shields.io/ossf-scorecard/github.com/dcondrey/blindmind?style=flat-square&amp;labelColor=20232a" alt="OpenSSF Scorecard"></a>
-  <a href="https://github.com/dcondrey/blindmind/blob/main/LICENSE"><img src="https://img.shields.io/github/license/dcondrey/blindmind?style=flat-square&amp;color=007ec6&amp;labelColor=20232a" alt="Apache-2.0 license"></a>
-  <img src="https://img.shields.io/badge/python-3.11%2B-007ec6?style=flat-square&amp;labelColor=20232a&amp;logo=python&amp;logoColor=white" alt="Python 3.11+">
-  <img src="https://img.shields.io/badge/local--first-yes-007ec6?style=flat-square&amp;labelColor=20232a" alt="Local-first">
-  <a href="https://docs.astral.sh/ruff/"><img src="https://img.shields.io/badge/Ruff-checked-6a4c93?style=flat-square&amp;labelColor=20232a" alt="Ruff checked"></a>
-  <a href="./CODE_OF_CONDUCT.md"><img src="https://img.shields.io/badge/code_of_conduct-Contributor_Covenant_2.1-6a4c93?style=flat-square&amp;labelColor=20232a" alt="Contributor Covenant 2.1"></a>
-  <a href="https://github.com/sponsors/dcondrey"><img src="https://img.shields.io/badge/sponsor-dcondrey-EA4AAA?style=flat-square&amp;labelColor=20232a&amp;logo=githubsponsors&amp;logoColor=white" alt="Sponsor dcondrey"></a>
-</p>
+[![CI](https://img.shields.io/github/actions/workflow/status/dcondrey/blindmind/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/dcondrey/blindmind/actions/workflows/ci.yml) [![CodeQL](https://img.shields.io/github/actions/workflow/status/dcondrey/blindmind/codeql.yml?branch=main&style=flat-square&label=CodeQL)](https://github.com/dcondrey/blindmind/actions/workflows/codeql.yml) [![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/dcondrey/blindmind?style=flat-square&label=OpenSSF%20Scorecard)](https://scorecard.dev/viewer/?uri=github.com/dcondrey/blindmind) [![License](https://img.shields.io/github/license/dcondrey/blindmind?style=flat-square)](https://github.com/dcondrey/blindmind/blob/main/LICENSE)
 
 <p align="center">
   <a href="#getting-started">Getting Started</a> &middot;
